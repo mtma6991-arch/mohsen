@@ -1,0 +1,19 @@
+{% extends "layout/base.html" %}
+{% block content %}
+<section class="wrap head">
+  <h1>گوشی‌های قابل سفارش</h1>
+  <p>{{ data.promise }}</p>
+</section>
+<section class="wrap table-like">
+  {% for phone in data.phones %}
+    <article>
+      <div>
+        <h2>{{ phone.name }}</h2>
+        <p>{{ phone.chip }} · {{ phone.ram }}</p>
+      </div>
+      <span>{{ phone.store }}</span>
+      <strong>{{ phone.price }}</strong>
+    </article>
+  {% endfor %}
+</section>
+{% endblock %}

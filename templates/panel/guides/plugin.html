@@ -1,0 +1,82 @@
+{% extends "panel/base.html" %}
+{% block title %}راهنمای افزونه{% endblock %}
+{% block heading %}راهنمای کدنویسی افزونه{% endblock %}
+{% block content %}
+<article class="card guide">
+  <p>مرکز افزونه مثل مخزن وردپرسِ همین سرور است: بسته را یک‌بار نصب می‌کنید، بعد آن را به یک یا چند <strong>دسته</strong> اضافه می‌کنید. از آن لحظه تمام وب‌سایت‌های آن دسته افزونه را دارند؛ لازم نیست سایت‌به‌سایت نصب شود.</p>
+  <p>
+    <a class="btn" href="{% url 'plugin-example' 'sms' %}">نمونه پیامک</a>
+    <a class="btn" href="{% url 'plugin-example' 'page-builder' %}">نمونه صفحه‌ساز</a>
+  </p>
+  <h2>ساختار زیپ</h2>
+  <div class="filetree" dir="ltr">
+    plugin.json<br>
+    plugin.py<br>
+    README.md<br>
+  </div>
+  <h2>plugin.json</h2>
+  <pre>{
+  "name": "پیامک",
+  "slug": "sms",
+  "version": "1.0.0",
+  "author": "نام شما",
+  "description": "چه می‌کند",
+  "entry": "plugin.py",
+  "class": "Plugin",
+  "hooks": ["site_context", "on_form_submit", "admin_panel"]
+}</pre>
+  <h2>کلاس افزونه</h2>
+  <pre>from mohsen_sdk import BasePlugin, plugin_get, plugin_set, merged_plugin_settings
+
+class Plugin(BasePlugin):
+    slug = "sms"
+    name = "پیامک"
+
+    def site_context(self, website, request):
+        return {"enabled": True}
+
+    def on_form_submit(self, website, form_name, data):
+        if form_name != "contact":
+            return None
+
+    def admin_panel(self, request, website):
+        return {"title": "پیامک", "html": "<p>پنل سایت</p>"}
+
+    def handle_admin_post(self, request, website):
+        plugin_set(website, self.slug, "settings", {"provider": "log"})
+
+    def category_admin_panel(self, request, category, assignment):
+        return None
+
+    def handle_category_post(self, request, category, assignment):
+        assignment.settings = {"provider": "log"}
+        assignment.save(update_fields=["settings"])</pre>
+  <h3>قلاب‌ها</h3>
+  <ul>
+    <li><code>site_context</code> دیکشنری قالب، زیر <code>plugins.slug</code>.</li>
+    <li><code>head_html</code> رشته‌ای برای انتهای head. با احتیاط.</li>
+    <li><code>on_form_submit</code> بعد از ذخیره پیام تماس.</li>
+    <li><code>admin_panel</code> و <code>handle_admin_post</code> فرم داخل ویرایش هر سایت.</li>
+    <li><code>category_admin_panel</code> تنظیم پیش‌فرض برای کل دسته، در صفحه خود افزونه.</li>
+  </ul>
+  <h3>ذخیره داده</h3>
+  <ul>
+    <li><code>plugin_get(website, slug, key, default)</code> و <code>plugin_set</code> داده مخصوص یک سایت.</li>
+    <li><code>merged_plugin_settings(website, slug)</code> تنظیم دسته را با تنظیم سایت ترکیب می‌کند. مقدار خالی سایت، پیش‌فرض دسته را پاک نمی‌کند.</li>
+  </ul>
+  <h2>نمایش در قالب مشتری</h2>
+  <p>خروجی HTML را با <code>markupsafe.Markup</code> برگردانید فقط اگر خودتان همه ورودی‌ها را با <code>html.escape</code> امن کرده باشید. نمونه صفحه‌ساز همین کار را می‌کند. قالب مشتری این را چاپ می‌کند:</p>
+  <pre>{% verbatim %}{% if plugins.page_builder and plugins.page_builder.active %}
+  {{ plugins.page_builder.html }}
+{% endif %}{% endverbatim %}</pre>
+  <h2>امنیت</h2>
+  <p>افزونه با همان کاربر سرویس اجرا می‌شود و محدود به سندباکس نیست. این تصمیم عمدی و شبیه وردپرس است. زیپ ناشناس را نصب نکنید. پنل، پسوند فایل، مسیر <code>..</code> و قابل import بودن کلاس را چک می‌کند، ولی منطق افزونه را محدود نمی‌کند.</p>
+  <h2>چرخه افزودن به دسته</h2>
+  <ol>
+    <li>زیپ را در مرکز افزونه بارگذاری کنید.</li>
+    <li>در صفحه افزونه دسته‌ها را تیک بزنید، یا از ویرایش دسته افزونه را انتخاب کنید.</li>
+    <li>سایت جدیدی لازم نیست ساخته شود؛ سایت‌های فعلی همان دسته بلافاصله افزونه را می‌گیرند.</li>
+    <li>برای تنظیم هر مشتری، صفحه ویرایش همان وب‌سایت بلوک افزونه را نشان می‌دهد.</li>
+  </ol>
+</article>
+{% endblock %}

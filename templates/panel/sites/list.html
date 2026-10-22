@@ -1,0 +1,26 @@
+{% extends "panel/base.html" %}
+{% load panel_tags %}
+{% block title %}وب‌سایت‌ها{% endblock %}
+{% block heading %}مشتری‌ها و دامنه‌ها{% endblock %}
+{% block content %}
+<div class="toolbar">
+  <form class="search"><input name="q" value="{{ q }}" placeholder="دامنه یا نام مشتری"><button class="btn">جستجو</button></form>
+  <a class="btn" href="{% url 'site-create' %}">افزودن وب‌سایت</a>
+</div>
+<div class="card" style="margin-top:1rem">
+  <table>
+    <tr><th>مشتری</th><th>دامنه</th><th>دسته / قالب</th><th>وضعیت</th><th>ثبت</th></tr>
+    {% for row in rows %}
+      <tr>
+        <td><a href="{% url 'site-edit' row.pk %}">{{ row.customer_name }}</a><div class="muted">{{ row.title }}</div></td>
+        <td dir="ltr">{{ row.domain }}</td>
+        <td>{{ row.category.name }}<br><span class="muted">{{ row.template.name }}</span></td>
+        <td>{{ row.get_status_display }}</td>
+        <td>{{ row.created_at|jalali }}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="5">سایتی ثبت نشده.</td></tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

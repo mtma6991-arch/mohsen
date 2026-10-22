@@ -1,0 +1,16 @@
+{% extends "layout/base.html" %}
+{% block content %}
+<section class="wrap head"><h1>پیام به فروشگاه</h1><p>{{ site.phone }} · {{ site.email }}</p></section>
+<section class="wrap">
+  <form method="post" action="{{ form_action('contact') }}" class="form">
+    {% if sent %}<p class="ok">پیام ثبت شد.</p>{% endif %}
+    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+    <input class="hp" name="company_website" tabindex="-1" autocomplete="off">
+    <label>نام<input name="name" required></label>
+    <label>موبایل<input name="phone" required></label>
+    <label>ایمیل<input type="email" name="email"></label>
+    <label>موضوع<textarea name="message" rows="5" required></textarea></label>
+    <button type="submit">ارسال</button>
+  </form>
+</section>
+{% endblock %}

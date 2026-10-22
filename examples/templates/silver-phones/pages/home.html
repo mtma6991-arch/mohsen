@@ -1,0 +1,27 @@
+{% extends "layout/base.html" %}
+{% block content %}
+{% if plugins.page_builder and plugins.page_builder.active %}
+  <div class="wrap">{{ plugins.page_builder.html }}</div>
+{% else %}
+<section class="hero">
+  <div>
+    <p class="eyebrow">فروشگاه {{ site.category }}</p>
+    <h1>{{ site.title }}</h1>
+    <p>{{ site.tagline }}</p>
+    <p class="muted">{{ data.promise }}</p>
+    <a class="btn" href="{{ page_url('phones') }}">لیست گوشی‌ها</a>
+  </div>
+  <div class="device" aria-hidden="true"><span></span><b>۱۲۸</b><small>گیگ نمونه</small></div>
+</section>
+{% endif %}
+<section class="wrap cards">
+  {% for phone in data.phones[:3] %}
+    <article>
+      <p class="sku">{{ phone.chip }}</p>
+      <h2>{{ phone.name }}</h2>
+      <p>{{ phone.ram }} رم · {{ phone.store }}</p>
+      <strong>{{ phone.price }} تومان</strong>
+    </article>
+  {% endfor %}
+</section>
+{% endblock %}

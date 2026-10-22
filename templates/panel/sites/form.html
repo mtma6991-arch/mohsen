@@ -1,0 +1,56 @@
+{% extends "panel/base.html" %}
+{% load panel_tags %}
+{% block title %}{% if mode == "create" %}سایت تازه{% else %}{{ obj.domain }}{% endif %}{% endblock %}
+{% block heading %}{% if mode == "create" %}افزودن مشتری{% else %}{{ obj.title }}{% endif %}{% endblock %}
+{% block content %}
+{% if mode == "edit" %}
+  <div class="toolbar">
+    <a class="btn" target="_blank" href="/_preview/{{ obj.domain }}/">باز کردن پیش‌نمایش</a>
+    <span class="muted">برای دامنه واقعی، رکورد A را به آی‌پی همین سرور بدهید. پیشوند www هم به همین سایت می‌رسد.</span>
+  </div>
+{% endif %}
+<form method="post" class="card form-card" style="margin-top:1rem">
+  {% csrf_token %}
+  {{ template_map|json_script:"template-map" }}
+  <div class="grid-2">
+    {% for field in form %}
+      <label>{{ field.label }}{{ field }}{{ field.errors }}{% if field.help_text %}<small class="hint">{{ field.help_text }}</small>{% endif %}</label>
+    {% endfor %}
+  </div>
+  <button class="btn" type="submit">{% if mode == "create" %}ساخت سایت{% else %}ذخیره مشخصات{% endif %}</button>
+</form>
+{% if mode == "edit" %}
+  <div class="layout" style="margin-top:1rem">
+    <div>
+      {% for panel in panels %}
+        <section class="card" style="margin-bottom:1rem">
+          <h2>{{ panel.title }}</h2>
+          {{ panel.html|safe }}
+        </section>
+      {% empty %}
+        <section class="card"><h2>افزونه‌ها</h2><p class="hint">دسته این سایت افزونه فعالی ندارد. از مرکز افزونه به دسته اضافه کنید.</p></section>
+      {% endfor %}
+      <section class="card">
+        <h2>صندوق پیام</h2>
+        {% for msg in inbox %}
+          <article>
+            <strong>{{ msg.name }}</strong> · {{ msg.phone }} · {{ msg.created_at|jalali }}
+            <p>{{ msg.body }}</p>
+            <form method="post" action="{% url 'message-delete' msg.pk %}">{% csrf_token %}<button class="ghost">حذف پیام</button></form>
+          </article>
+        {% empty %}<p class="muted">پیامی نیست.</p>{% endfor %}
+      </section>
+    </div>
+    <div>
+      <div class="card">
+        <h2>پیش‌نمایش</h2>
+        <iframe class="preview" src="/_preview/{{ obj.domain }}/" title="preview"></iframe>
+      </div>
+      <form method="post" action="{% url 'site-delete' obj.pk %}" class="card">{% csrf_token %}
+        <h2>حذف سایت</h2>
+        <button class="danger">حذف {{ obj.domain }}</button>
+      </form>
+    </div>
+  </div>
+{% endif %}
+{% endblock %}

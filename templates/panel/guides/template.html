@@ -1,0 +1,82 @@
+{% extends "panel/base.html" %}
+{% block title %}راهنمای قالب{% endblock %}
+{% block heading %}راهنمای کدنویسی زیپ قالب{% endblock %}
+{% block content %}
+<article class="card guide">
+  <p>قالب یک فایل زیپ است که پنل آن را استخراج، اعتبارسنجی و به یک دسته وصل می‌کند. سایت‌های آن دسته می‌توانند همین قالب را انتخاب کنند. موتور رندر <strong>Jinja2 سندباکس</strong> است؛ کد پایتون داخل قالب اجرا نمی‌شود.</p>
+  <p>
+    <a class="btn" href="{% url 'template-example' 'jewelry' %}">نمونه جواهر</a>
+    <a class="btn" href="{% url 'template-example' 'phones' %}">نمونه گوشی</a>
+  </p>
+  <h2>ساختار زیپ</h2>
+  <div class="filetree" dir="ltr">
+    template.json<br>
+    layout/base.html<br>
+    pages/home.html<br>
+    pages/about.html<br>
+    pages/contact.html<br>
+    assets/style.css<br>
+    assets/fonts/…<br>
+  </div>
+  <p>اگر همه چیز داخل یک پوشه باشد هم قبول است، به شرطی که <code>template.json</code> در همان پوشه باشد. مسیرهای <code>..</code>، لینک نمادین و پسوندهای غیرمجاز رد می‌شوند.</p>
+  <h2>template.json</h2>
+  <pre>{
+  "name": "آتلیه زرین",
+  "slug": "jewelry-atelier",
+  "version": "1.0.0",
+  "author": "نام شما",
+  "description": "یک خط توضیح",
+  "homepage": "home",
+  "pages": [
+    {"slug": "home", "title": "خانه", "file": "pages/home.html", "in_menu": true},
+    {"slug": "contact", "title": "تماس", "file": "pages/contact.html", "in_menu": true}
+  ],
+  "demo_data": {"products": [{"name": "گردنبند", "price": "۱۰۰۰", "note": "", "metal": "طلا"}]}
+}</pre>
+  <ul>
+    <li><code>slug</code> قالب و صفحات فقط حروف کوچک انگلیسی، عدد و خط تیره.</li>
+    <li><code>file</code> باید به <code>.html</code> ختم شود و داخل زیپ وجود داشته باشد.</li>
+    <li><code>homepage</code> یکی از slugهای صفحات است. همان صفحه روی <code>/</code> باز می‌شود.</li>
+    <li><code>demo_data</code> داده نمونه است. در ویرایش سایت، با «محتوای اختصاصی JSON» قابل جایگزینی است.</li>
+  </ul>
+  <h2>متغیرهای قالب</h2>
+  <table>
+    <tr><th>عبارت</th><th>معنی</th></tr>
+    <tr><td dir="ltr">site.title / tagline / phone / email / address / logo_text / domain</td><td>مشخصات همان مشتری</td></tr>
+    <tr><td dir="ltr">site.category</td><td>نام دسته</td></tr>
+    <tr><td dir="ltr">site.accent_color</td><td>رنگ سایت یا رنگ دسته</td></tr>
+    <tr><td dir="ltr">page.slug / page.title</td><td>صفحه جاری</td></tr>
+    <tr><td dir="ltr">pages</td><td>فهرست صفحات مانیفست برای منو</td></tr>
+    <tr><td dir="ltr">data</td><td>ادغام demo_data و محتوای اختصاصی سایت</td></tr>
+    <tr><td dir="ltr">plugins.<slug></td><td>خروجی افزونه‌های فعالِ دسته</td></tr>
+    <tr><td dir="ltr">asset('style.css')</td><td>آدرس فایل داخل assets</td></tr>
+    <tr><td dir="ltr">page_url('about')</td><td>پیوند صفحه؛ خانه به / می‌رود</td></tr>
+    <tr><td dir="ltr">form_action('contact')</td><td>مقصد فرم تماس پلتفرم</td></tr>
+    <tr><td dir="ltr">csrf_token</td><td>توکن فرم</td></tr>
+    <tr><td dir="ltr">sent</td><td>بعد از ارسال موفق فرم true است</td></tr>
+  </table>
+  <h2>فرم تماس</h2>
+  <pre>{% verbatim %}<form method="post" action="{{ form_action('contact') }}">
+  <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+  <input class="hp" name="company_website" tabindex="-1" autocomplete="off">
+  <input name="name" required>
+  <textarea name="message" required></textarea>
+</form>{% endverbatim %}</pre>
+  <p>فیلد مخفی <code>company_website</code> تله ربات است. پیام در پنل همان سایت ذخیره می‌شود و هوک افزونه‌ها (مثل پیامک) صدا زده می‌شود.</p>
+  <h2>افزونه‌ها داخل قالب</h2>
+  <pre>{% verbatim %}{% if plugins.page_builder and plugins.page_builder.active %}
+  {{ plugins.page_builder.html }}
+{% endif %}{% endverbatim %}</pre>
+  <p>اگر دسته آن افزونه را نداشته باشد، شرط برقرار نمی‌شود و طرح پیش‌فرض قالب می‌ماند. برای پیامک چیزی را در صفحه چاپ نکنید؛ کلید API هرگز به قالب نمی‌رسد.</p>
+  <h2>قواعد ایمنی که پنل چک می‌کند</h2>
+  <ul>
+    <li>حداکثر حدود ۸۰ مگابایت زیپ و ۲۰۰ مگابایت پس از باز شدن.</li>
+    <li>پسوند مجاز: html, css, js, json, svg, png, jpg, jpeg, webp, gif, ico, woff, woff2, txt, md, map, webmanifest.</li>
+    <li>فایل py داخل قالب رد می‌شود.</li>
+    <li>نحو Jinja قبل از ذخیره کامپایل می‌شود. خطا همان لحظه نشان داده می‌شود.</li>
+    <li>اتو-اسکیپ روشن است. HTML خام مهمان را تزریق نکنید.</li>
+  </ul>
+  <h2>حداقل قالب سالم</h2>
+  <p>یک <code>pages/home.html</code> که از <code>layout/base.html</code> ارث می‌برد کافی است. نمونه کامل را دانلود کنید و فقط متن و CSS را عوض کنید؛ سپس زیپ را در «قالب‌ها» برای دسته مورد نظر بارگذاری کنید.</p>
+</article>
+{% endblock %}

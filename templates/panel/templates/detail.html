@@ -1,0 +1,33 @@
+{% extends "panel/base.html" %}
+{% load panel_tags %}
+{% block title %}{{ obj.name }}{% endblock %}
+{% block heading %}{{ obj.name }}{% endblock %}
+{% block content %}
+<div class="toolbar">
+  <span class="badge"><span class="dot" style="background:{{ obj.category.color }}"></span>{{ obj.category.name }}</span>
+  <span class="badge" dir="ltr">{{ obj.version }}</span>
+  <span class="badge">{{ obj.author }}</span>
+  <form method="post" action="{% url 'template-toggle' obj.pk %}">{% csrf_token %}<button class="ghost">{% if obj.is_active %}غیرفعال کردن{% else %}فعال کردن{% endif %}</button></form>
+  {% if obj.archive %}<a class="ghost" href="{% url 'template-download' obj.pk %}">دانلود زیپ</a>{% endif %}
+  <form method="post" action="{% url 'template-delete' obj.pk %}">{% csrf_token %}<button class="danger">حذف</button></form>
+</div>
+<div class="layout">
+  <div class="card">
+    <h2>مانیفست</h2>
+    <p>{{ obj.description }}</p>
+    <table>
+      <tr><th>slug صفحه</th><th>عنوان</th><th>فایل</th><th>منو</th></tr>
+      {% for page in obj.pages %}
+        <tr><td dir="ltr">{{ page.slug }}</td><td>{{ page.title }}</td><td dir="ltr">{{ page.file }}</td><td>{% if page.in_menu %}بله{% else %}خیر{% endif %}</td></tr>
+      {% endfor %}
+    </table>
+    <p class="muted">به‌روزرسانی {{ obj.updated_at|jalali }}</p>
+  </div>
+  <div class="card">
+    <h2>فایل‌های استخراج‌شده</h2>
+    <div class="filetree">
+      {% for file in files %}<div dir="ltr">{{ file }}</div>{% empty %}<p>روی دیسک پیدا نشد.</p>{% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

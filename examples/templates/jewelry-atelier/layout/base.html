@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ page.title }} · {{ site.title }}</title>
+  <meta name="description" content="{{ site.description or site.tagline }}">
+  <link rel="stylesheet" href="{{ asset('style.css') }}">
+  {{ plugins_head }}
+</head>
+<body>
+  <div class="frame">
+    <header class="top">
+      <a class="brand" href="{{ page_url('home') }}">
+        <span class="mark"></span>
+        <span>{{ site.logo_text }}</span>
+      </a>
+      <nav>
+        {% for item in pages if item.in_menu %}
+          <a href="{{ page_url(item.slug) }}" {% if item.slug == page.slug %}aria-current="page"{% endif %}>{{ item.title }}</a>
+        {% endfor %}
+      </nav>
+      <a class="phone" href="tel:{{ site.phone }}">{{ site.phone }}</a>
+    </header>
+    <main>
+      {% block content %}{% endblock %}
+    </main>
+    <footer>
+      <div>
+        <strong>{{ site.title }}</strong>
+        <p>{{ site.tagline }}</p>
+      </div>
+      <div>
+        <p>{{ site.address }}</p>
+        <p>{{ site.email }}</p>
+      </div>
+      <small>دسته {{ site.category }}</small>
+    </footer>
+  </div>
+</body>
+</html>

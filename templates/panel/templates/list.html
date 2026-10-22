@@ -1,0 +1,26 @@
+{% extends "panel/base.html" %}
+{% block title %}قالب‌ها{% endblock %}
+{% block heading %}قالب‌های سایت{% endblock %}
+{% block content %}
+<div class="toolbar">
+  <form class="search" method="get"><input name="q" value="{{ q }}" placeholder="نام قالب"><button class="btn">جستجو</button></form>
+  <a class="btn" href="{% url 'template-upload' %}">بارگذاری زیپ</a>
+  <a class="ghost" href="{% url 'guide-template' %}">راهنمای کدنویسی زیپ</a>
+</div>
+<div class="card" style="margin-top:1rem">
+  <table>
+    <tr><th>قالب</th><th>دسته</th><th>نسخه</th><th>صفحه</th><th>وضعیت</th></tr>
+    {% for row in rows %}
+      <tr>
+        <td><a href="{% url 'template-detail' row.pk %}">{{ row.name }}</a><div class="muted" dir="ltr">{{ row.slug }}</div></td>
+        <td><span class="dot" style="background:{{ row.category.color }}"></span> {{ row.category.name }}</td>
+        <td dir="ltr">{{ row.version }}</td>
+        <td>{{ row.pages|length }}</td>
+        <td>{% if row.is_active %}فعال{% else %}خاموش{% endif %}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="5">قالبی نصب نیست. زیپ کد را بارگذاری کنید یا نمونه‌های راهنما را بگیرید.</td></tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

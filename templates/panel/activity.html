@@ -1,0 +1,22 @@
+{% extends "panel/base.html" %}
+{% load panel_tags %}
+{% block title %}گزارش{% endblock %}
+{% block heading %}گزارش فعالیت{% endblock %}
+{% block content %}
+<div class="card">
+  <table>
+    <tr><th>زمان</th><th>کاربر</th><th>عمل</th><th>موضوع</th><th>شرح</th></tr>
+    {% for row in logs %}
+      <tr>
+        <td>{{ row.created_at|jalali }}</td>
+        <td>{{ row.username }}</td>
+        <td>{{ row.action }}</td>
+        <td>{{ row.object_repr }}</td>
+        <td>{{ row.message }}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="5">خالی</td></tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

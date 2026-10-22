@@ -1,0 +1,31 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>ورود · محسن</title>
+  <link rel="stylesheet" href="{% static 'panel/css/panel.css' %}">
+</head>
+<body>
+  <div class="login-body">
+    <section class="login-copy">
+      <p class="kicker">MOHSEN SITE BUILDER</p>
+      <h1>پنل ساخت و تحویل سایت مشتری.</h1>
+      <p>دسته، قالب زیپ، افزونه و دامنه از همین‌جا اداره می‌شود. آدرس این صفحه خودش محرمانه است.</p>
+    </section>
+    <section class="login-panel">
+      <form method="post">
+        {% csrf_token %}
+        <h2>ورود مدیر</h2>
+        {{ form.non_field_errors }}
+        {% for field in form %}
+          <label>{{ field.label }}{{ field }}{{ field.errors }}</label>
+        {% endfor %}
+        <button class="btn" type="submit">ورود</button>
+      </form>
+    </section>
+  </div>
+</body>
+</html>

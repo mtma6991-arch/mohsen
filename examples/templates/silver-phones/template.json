@@ -1,0 +1,25 @@
+{
+  "name": "همراه نقره‌ای",
+  "slug": "silver-phones",
+  "version": "1.0.0",
+  "author": "Mohsen",
+  "description": "قالب فروشگاه گوشی برای دسته نقره‌ای. ناحیه صفحه ساز روی صفحه خانه دارد.",
+  "homepage": "home",
+  "pages": [
+    {"slug": "home", "title": "خانه", "file": "pages/home.html", "in_menu": true},
+    {"slug": "phones", "title": "گوشی‌ها", "file": "pages/phones.html", "in_menu": true},
+    {"slug": "about", "title": "فروشگاه", "file": "pages/about.html", "in_menu": true},
+    {"slug": "contact", "title": "تماس", "file": "pages/contact.html", "in_menu": true}
+  ],
+  "demo_data": {
+    "promise": "قیمت روی کارت همان قیمت فاکتور است. موجودی هر شب با انبار چک می‌شود.",
+    "phones": [
+      {"name": "Niva X1", "price": "۲۴٬۹۰۰٬۰۰۰", "chip": "نمایشگر ۱۲۰ هرتز", "ram": "۸ گیگ", "store": "انبار مرکزی"},
+      {"name": "Niva Air", "price": "۱۸٬۴۰۰٬۰۰۰", "chip": "سبک ۱۴۸ گرم", "ram": "۶ گیگ", "store": "ویترین"},
+      {"name": "Campo 12", "price": "۳۱٬۷۰۰٬۰۰۰", "chip": "باتری ۵۰۰۰", "ram": "۱۲ گیگ", "store": "قابل رزرو"},
+      {"name": "Campo Mini", "price": "۱۵٬۲۰۰٬۰۰۰", "chip": "یک‌دستی", "ram": "۸ گیگ", "store": "انبار مرکزی"},
+      {"name": "Linea Pro", "price": "۴۲٬۰۰۰٬۰۰۰", "chip": "لنز تله", "ram": "۱۲ گیگ", "store": "سفارش ۴ روزه"},
+      {"name": "Linea SE", "price": "۲۷٬۵۰۰٬۰۰۰", "chip": "نسخه اقتصادی پرو", "ram": "۸ گیگ", "store": "ویترین"}
+    ]
+  }
+}

@@ -1,0 +1,45 @@
+{% extends "panel/base.html" %}
+{% load panel_tags %}
+{% block title %}پیشخوان · محسن{% endblock %}
+{% block heading %}پیشخوان{% endblock %}
+{% block content %}
+<section class="cards">
+  <article class="stat"><b>{{ counts.categories }}</b><span>دسته</span></article>
+  <article class="stat"><b>{{ counts.templates }}</b><span>قالب</span></article>
+  <article class="stat"><b>{{ counts.plugins }}</b><span>افزونه</span></article>
+  <article class="stat"><b>{{ counts.websites }}</b><span>وب‌سایت</span></article>
+  <article class="stat"><b>{{ counts.messages }}</b><span>پیام فرم‌ها</span></article>
+</section>
+<section class="layout">
+  <div class="card">
+    <h2>آخرین سایت‌ها</h2>
+    <table>
+      <tr><th>مشتری</th><th>دامنه</th><th>دسته</th><th>قالب</th></tr>
+      {% for site in websites %}
+        <tr>
+          <td><a href="{% url 'site-edit' site.pk %}">{{ site.customer_name }}</a></td>
+          <td dir="ltr">{{ site.domain }}</td>
+          <td>{{ site.category.name }}</td>
+          <td>{{ site.template.name }}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="4">هنوز سایتی نیست. از «وب‌سایت‌ها» مشتری اضافه کنید.</td></tr>
+      {% endfor %}
+    </table>
+  </div>
+  <div class="card">
+    <h2>فعالیت</h2>
+    {% for row in activity %}
+      <p><strong>{{ row.action }}</strong> · {{ row.object_repr }}<br><span class="muted">{{ row.created_at|jalali }} · {{ row.username }}</span></p>
+    {% empty %}
+      <p class="muted">گزارشی نیست.</p>
+    {% endfor %}
+    <h2>پیام‌های تازه</h2>
+    {% for msg in messages_recent %}
+      <p>{{ msg.website.domain }} — {{ msg.name }}<br><span class="muted">{{ msg.body|truncatechars:80 }}</span></p>
+    {% empty %}
+      <p class="muted">پیامی نرسیده.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

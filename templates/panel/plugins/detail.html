@@ -1,0 +1,38 @@
+{% extends "panel/base.html" %}
+{% block title %}{{ obj.name }}{% endblock %}
+{% block heading %}{{ obj.name }}{% endblock %}
+{% block content %}
+<div class="toolbar">
+  <span class="badge" dir="ltr">{{ obj.slug }} {{ obj.version }}</span>
+  <form method="post" action="{% url 'plugin-toggle' obj.pk %}">{% csrf_token %}<button class="ghost">{% if obj.is_active %}غیرفعال کردن{% else %}فعال کردن{% endif %}</button></form>
+  <form method="post" action="{% url 'plugin-delete' obj.pk %}">{% csrf_token %}<button class="danger">حذف از مرکز</button></form>
+</div>
+<p>{{ obj.description }}</p>
+{% if load_error %}<p class="errorlist">بارگذاری کد افزونه ناموفق بود: {{ load_error }}</p>{% endif %}
+<div class="layout">
+  <form method="post" class="card">
+    {% csrf_token %}
+    <input type="hidden" name="form" value="assign">
+    <h2>افزودن به دسته‌ها</h2>
+    <p class="hint">با ذخیره، افزونه برای همه وب‌سایت‌های دسته‌های تیک‌خورده فعال می‌شود و از دسته‌های برداشته‌شده حذف می‌شود.</p>
+    <div class="checks">
+      {% for cat in categories %}
+        <label><input type="checkbox" name="categories" value="{{ cat.id }}" {% if cat.id in assigned_ids %}checked{% endif %}>
+          <span class="dot" style="background:{{ cat.color }}"></span> {{ cat.name }}
+        </label>
+      {% endfor %}
+    </div>
+    <button class="btn" type="submit">اعمال روی دسته‌ها</button>
+  </form>
+  <div class="card">
+    <h2>فایل‌ها</h2>
+    {% for file in files %}<div dir="ltr">{{ file }}</div>{% empty %}<p>خالی</p>{% endfor %}
+  </div>
+</div>
+{% for panel in panels %}
+  <section class="card" style="margin-top:1rem">
+    <h2>{{ panel.title }}</h2>
+    {{ panel.html|safe }}
+  </section>
+{% endfor %}
+{% endblock %}

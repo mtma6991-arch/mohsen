@@ -1,0 +1,29 @@
+{% extends "panel/base.html" %}
+{% load panel_tags %}
+{% block title %}تنظیمات{% endblock %}
+{% block heading %}محل پنل{% endblock %}
+{% block content %}
+<div class="layout">
+  <div class="card">
+    <h2>آدرس‌ها</h2>
+    <p>پنل با ترکیب <strong>آی‌پی + پورت + مسیر محرمانه</strong> باز می‌شود. مسیر در صفحه عمومی سایت‌ها نشان داده نمی‌شود.</p>
+    <p>پورت: <strong dir="ltr">{{ PANEL_PORT }}</strong></p>
+    <p>مسیر محرمانه: <code dir="ltr">/{{ WEB_PASS }}/</code></p>
+    <p dir="ltr">http://SERVER:{{ PANEL_PORT }}/{{ WEB_PASS }}/</p>
+    <h2>دامنه‌های اضافه‌شده</h2>
+    {% for domain in domains %}
+      <p dir="ltr">{% if domain.https %}https{% else %}http{% endif %}://{{ domain.domain }}/{{ WEB_PASS }}/ {% if domain.is_primary %}· اصلی{% endif %}</p>
+    {% empty %}
+      <p class="muted">هنوز دامنه‌ای برای پنل ثبت نشده. روی سرور دستور <code>sudo mohsen</code> را بزنید و گزینه «افزودن دامنه پنل (add domain)» را انتخاب کنید. بعد از آن، هم آی‌پی و هم دامنه کار می‌کنند.</p>
+    {% endfor %}
+  </div>
+  <div class="card">
+    <h2>دستور مدیریت</h2>
+    <p>بعد از نصب، در ترمینال سرور:</p>
+    <pre>sudo mohsen</pre>
+    <p class="hint">گزینه‌ها شامل وضعیت، add domain، نمایش اطلاعات ورود، تغییر رمز، تغییر web pass، راه‌اندازی مجدد و پشتیبان هستند.</p>
+    <p><a href="{% url 'password' %}">تغییر رمز از داخل پنل</a></p>
+    {% if debug %}<p class="hint">این محیط توسعه است. ورود نمونه اگر کاربر دیگری نباشد: admin / admin12345</p>{% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "layout/base.html" %}
+{% block content %}
+<section class="page-head">
+  <p class="kicker">Contact</p>
+  <h1>برای سفارش بنویسید</h1>
+  <p>{{ site.phone }} · {{ site.email }}</p>
+</section>
+<section class="contact-grid">
+  <form method="post" action="{{ form_action('contact') }}" class="form">
+    {% if sent %}<p class="ok">پیام رسید. اگر افزونه پیامک روی این دسته فعال باشد، مدیر خبردار می‌شود.</p>{% endif %}
+    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+    <input type="text" name="company_website" tabindex="-1" autocomplete="off" class="hp" aria-hidden="true">
+    <label>نام<input name="name" required></label>
+    <label>تلفن<input name="phone"></label>
+    <label>ایمیل<input name="email" type="email"></label>
+    <label>پیام<textarea name="message" rows="5" required></textarea></label>
+    <button type="submit">ارسال به کارگاه</button>
+  </form>
+  <aside>
+    <h2>بازدید</h2>
+    <p>{{ site.address }}</p>
+    <p>ساعت کار نمونه: شنبه تا چهارشنبه، ۱۲ تا ۱۹</p>
+  </aside>
+</section>
+{% endblock %}

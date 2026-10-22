@@ -1,0 +1,10 @@
+{
+  "name": "پیامک",
+  "slug": "sms",
+  "version": "1.0.0",
+  "author": "Mohsen",
+  "description": "وقتی فرم تماس سایت ارسال شود، به موبایل مدیر پیامک می‌رود. اگر کلید کاوه‌نگار نباشد، ارسال در گزارش افزونه ذخیره می‌شود.",
+  "entry": "plugin.py",
+  "class": "Plugin",
+  "hooks": ["on_form_submit", "admin_panel", "category_admin_panel", "site_context"]
+}

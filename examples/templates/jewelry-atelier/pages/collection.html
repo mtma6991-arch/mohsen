@@ -1,0 +1,20 @@
+{% extends "layout/base.html" %}
+{% block content %}
+<section class="page-head">
+  <p class="kicker">Collection</p>
+  <h1>مجموعه جاری</h1>
+  <p>{{ data.intro }}</p>
+</section>
+<section class="grid full">
+  <div>
+    {% for product in data.products %}
+      <article class="card">
+        <div class="stone s{{ loop.index }}"></div>
+        <h3>{{ product.name }}</h3>
+        <p>{{ product.note }}</p>
+        <footer><span>{{ product.metal }}</span><strong>{{ product.price }} تومان</strong></footer>
+      </article>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}
