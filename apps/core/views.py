@@ -98,7 +98,9 @@ def password_view(request):
 
 @staff_required
 def guide_template(request):
-    return render(request, "panel/guides/template.html")
+    from apps.architect.catalog import ELEMENTS, GROUPS
+
+    return render(request, "panel/guides/template.html", {"elements": ELEMENTS, "groups": GROUPS})
 
 
 @staff_required

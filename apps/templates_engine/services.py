@@ -11,6 +11,7 @@ from django.core.files.base import ContentFile
 from jinja2 import FileSystemLoader, TemplateSyntaxError
 from jinja2.sandbox import SandboxedEnvironment
 
+from apps.architect.document import validate_architect
 from apps.core.zipsafe import ALLOWED_TEMPLATE_EXT, ZipRejected, extract_zip, inspect_zip, locate_root
 from apps.templates_engine.models import TemplatePackage
 
@@ -68,6 +69,9 @@ def read_template_manifest(root: Path) -> dict:
         demo = {}
     if not isinstance(demo, dict):
         raise ZipRejected("demo_data باید شیء JSON باشد.")
+    page_slugs = [item["slug"] for item in pages]
+    page_files = {item["slug"]: item["file"] for item in pages}
+    architect = validate_architect(root, page_slugs, page_files)
     return {
         "name": str(data["name"])[:160],
         "slug": slug,
@@ -78,6 +82,7 @@ def read_template_manifest(root: Path) -> dict:
         "pages": pages,
         "demo_data": demo,
         "engine": "jinja2",
+        "architect": architect,
     }
 
 

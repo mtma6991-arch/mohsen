@@ -1,0 +1,289 @@
+{
+  "builder": "memar",
+  "version": "1.0",
+  "nodes": [
+    {
+      "uid": "layout-header",
+      "id": "section",
+      "page": "layout",
+      "settings": {}
+    },
+    {
+      "uid": "layout-logo",
+      "id": "logo",
+      "page": "layout",
+      "settings": {},
+      "parent": "layout-header"
+    },
+    {
+      "uid": "layout-nav",
+      "id": "nav-menu",
+      "page": "layout",
+      "settings": {},
+      "parent": "layout-header"
+    },
+    {
+      "uid": "layout-phone",
+      "id": "button",
+      "page": "layout",
+      "settings": {},
+      "parent": "layout-header"
+    },
+    {
+      "uid": "layout-footer",
+      "id": "footer",
+      "page": "layout",
+      "settings": {}
+    },
+    {
+      "uid": "layout-footer-title",
+      "id": "site-title",
+      "page": "layout",
+      "settings": {},
+      "parent": "layout-footer"
+    },
+    {
+      "uid": "layout-footer-tagline",
+      "id": "text",
+      "page": "layout",
+      "settings": {},
+      "parent": "layout-footer"
+    },
+    {
+      "uid": "layout-footer-address",
+      "id": "text",
+      "page": "layout",
+      "settings": {},
+      "parent": "layout-footer"
+    },
+    {
+      "uid": "layout-footer-email",
+      "id": "text",
+      "page": "layout",
+      "settings": {},
+      "parent": "layout-footer"
+    },
+    {
+      "uid": "layout-footer-category",
+      "id": "text",
+      "page": "layout",
+      "settings": {},
+      "parent": "layout-footer"
+    },
+    {
+      "uid": "home-hero",
+      "id": "hero",
+      "page": "home",
+      "settings": {}
+    },
+    {
+      "uid": "home-kicker",
+      "id": "heading",
+      "page": "home",
+      "settings": {},
+      "parent": "home-hero"
+    },
+    {
+      "uid": "home-title",
+      "id": "heading",
+      "page": "home",
+      "settings": {},
+      "parent": "home-hero"
+    },
+    {
+      "uid": "home-tagline",
+      "id": "text",
+      "page": "home",
+      "settings": {},
+      "parent": "home-hero"
+    },
+    {
+      "uid": "home-intro",
+      "id": "text",
+      "page": "home",
+      "settings": {},
+      "parent": "home-hero"
+    },
+    {
+      "uid": "home-actions",
+      "id": "container",
+      "page": "home",
+      "settings": {},
+      "parent": "home-hero"
+    },
+    {
+      "uid": "home-cta-collection",
+      "id": "button",
+      "page": "home",
+      "settings": {},
+      "parent": "home-actions"
+    },
+    {
+      "uid": "home-cta-order",
+      "id": "button",
+      "page": "home",
+      "settings": {},
+      "parent": "home-actions"
+    },
+    {
+      "uid": "home-counters",
+      "id": "counter",
+      "page": "home",
+      "settings": {}
+    },
+    {
+      "uid": "home-products",
+      "id": "product-grid",
+      "page": "home",
+      "settings": {}
+    },
+    {
+      "uid": "home-products-title",
+      "id": "heading",
+      "page": "home",
+      "settings": {},
+      "parent": "home-products"
+    },
+    {
+      "uid": "about-section",
+      "id": "section",
+      "page": "about",
+      "settings": {}
+    },
+    {
+      "uid": "about-kicker",
+      "id": "heading",
+      "page": "about",
+      "settings": {},
+      "parent": "about-section"
+    },
+    {
+      "uid": "about-title",
+      "id": "heading",
+      "page": "about",
+      "settings": {},
+      "parent": "about-section"
+    },
+    {
+      "uid": "about-body",
+      "id": "text",
+      "page": "about",
+      "settings": {},
+      "parent": "about-section"
+    },
+    {
+      "uid": "about-description",
+      "id": "text",
+      "page": "about",
+      "settings": {},
+      "parent": "about-section"
+    },
+    {
+      "uid": "about-facts",
+      "id": "icon-list",
+      "page": "about",
+      "settings": {},
+      "parent": "about-section"
+    },
+    {
+      "uid": "collection-head",
+      "id": "section",
+      "page": "collection",
+      "settings": {}
+    },
+    {
+      "uid": "collection-kicker",
+      "id": "heading",
+      "page": "collection",
+      "settings": {},
+      "parent": "collection-head"
+    },
+    {
+      "uid": "collection-title",
+      "id": "heading",
+      "page": "collection",
+      "settings": {},
+      "parent": "collection-head"
+    },
+    {
+      "uid": "collection-intro",
+      "id": "text",
+      "page": "collection",
+      "settings": {},
+      "parent": "collection-head"
+    },
+    {
+      "uid": "collection-grid",
+      "id": "product-grid",
+      "page": "collection",
+      "settings": {}
+    },
+    {
+      "uid": "contact-head",
+      "id": "section",
+      "page": "contact",
+      "settings": {}
+    },
+    {
+      "uid": "contact-kicker",
+      "id": "heading",
+      "page": "contact",
+      "settings": {},
+      "parent": "contact-head"
+    },
+    {
+      "uid": "contact-title",
+      "id": "heading",
+      "page": "contact",
+      "settings": {},
+      "parent": "contact-head"
+    },
+    {
+      "uid": "contact-meta",
+      "id": "text",
+      "page": "contact",
+      "settings": {},
+      "parent": "contact-head"
+    },
+    {
+      "uid": "contact-form-main",
+      "id": "contact-form",
+      "page": "contact",
+      "settings": {}
+    },
+    {
+      "uid": "contact-submit",
+      "id": "button",
+      "page": "contact",
+      "settings": {},
+      "parent": "contact-form-main"
+    },
+    {
+      "uid": "contact-aside",
+      "id": "section",
+      "page": "contact",
+      "settings": {}
+    },
+    {
+      "uid": "contact-aside-title",
+      "id": "heading",
+      "page": "contact",
+      "settings": {},
+      "parent": "contact-aside"
+    },
+    {
+      "uid": "contact-address",
+      "id": "text",
+      "page": "contact",
+      "settings": {},
+      "parent": "contact-aside"
+    },
+    {
+      "uid": "contact-hours",
+      "id": "text",
+      "page": "contact",
+      "settings": {},
+      "parent": "contact-aside"
+    }
+  ]
+}

@@ -157,35 +157,65 @@ systemctl enable nginx
 systemctl reload nginx
 
 IP="$(hostname -I 2>/dev/null | awk '{print $1}')"
-if [[ -z "${IP}" ]]; then
-  IP="SERVER_IP"
+if [[ -z "${IP}" || "${IP}" == 127.* ]]; then
+  IP="$(ip -4 route get 1.1.1.1 2>/dev/null | awk '{for (i=1; i<=NF; i++) if ($i=="src") {print $(i+1); exit}}')"
+fi
+if [[ -z "${IP}" || "${IP}" == 127.* ]]; then
+  echo "آی‌پی کارت شبکه پیدا نشد. آدرس ساختگی چاپ نمی‌شود."
+  echo "بعد از مشخص شدن آی‌پی: sudo mohsen"
+  IP=""
 fi
 ADMIN_USER="${MOHSEN_ADMIN_USER:-admin}"
 
 if [[ "$FIRST_INSTALL" -eq 1 ]]; then
-  cat > "$CRED" <<EOF
-محسن — مشخصات نصب
-آدرس پنل با آی‌پی و پورت: http://${IP}:8787/${WEB_PASS}/
-آدرس پنل روی پورت ۸۰:     http://${IP}/${WEB_PASS}/
+  if [[ -n "${IP}" ]]; then
+    cat > "$CRED" <<EOF
+محسن — مشخصات ورود
+این آدرس را عیناً در نوار مرورگر وارد کنید:
+LOGIN_URL_1=http://${IP}:8787/${WEB_PASS}/
+LOGIN_URL_2=http://${IP}/${WEB_PASS}/
+USERNAME=${ADMIN_USER}
+PASSWORD=${ADMIN_PASS}
 نام کاربری: ${ADMIN_USER}
 رمز عبور: ${ADMIN_PASS}
 دستور مدیریت: sudo mohsen
-افزودن دامنه پنل: داخل دستور mohsen گزینه add domain
+به‌روزرسانی از گیت‌هاب: sudo mohsen update
+حذف کامل: sudo mohsen uninstall --yes
 EOF
+  else
+    cat > "$CRED" <<EOF
+محسن — مشخصات ورود
+آی‌پی سرور هنگام نصب خوانده نشد. بعداً sudo mohsen را بزنید.
+USERNAME=${ADMIN_USER}
+PASSWORD=${ADMIN_PASS}
+نام کاربری: ${ADMIN_USER}
+رمز عبور: ${ADMIN_PASS}
+دستور مدیریت: sudo mohsen
+به‌روزرسانی از گیت‌هاب: sudo mohsen update
+حذف کامل: sudo mohsen uninstall --yes
+EOF
+  fi
   chmod 600 "$CRED"
   echo
   echo "============================================================"
   echo "  محسن — سایت‌ساز نصب شد"
+  echo "  این آدرس را عیناً در نوار مرورگر وارد کنید"
   echo "============================================================"
-  echo "  آدرس پنل با آی‌پی:"
-  echo "    http://${IP}:8787/${WEB_PASS}/"
-  echo "  آدرس پنل روی پورت ۸۰:"
-  echo "    http://${IP}/${WEB_PASS}/"
+  if [[ -n "${IP}" ]]; then
+    echo "  http://${IP}:8787/${WEB_PASS}/"
+    echo "  http://${IP}/${WEB_PASS}/"
+  else
+    echo "  آی‌پی پیدا نشد. بعد از بالا آمدن شبکه: sudo mohsen"
+  fi
   echo "  نام کاربری: ${ADMIN_USER}"
   echo "  رمز عبور:   ${ADMIN_PASS}"
   echo
-  echo "  دستور مدیریت (منو، شامل add domain):"
+  echo "  دستور مدیریت:"
   echo "    sudo mohsen"
+  echo "  به‌روزرسانی از گیت‌هاب:"
+  echo "    sudo mohsen update"
+  echo "  حذف کامل پروژه:"
+  echo "    sudo mohsen uninstall --yes"
   echo
   echo "  رونوشت محرمانه:"
   echo "    ${CRED}"
@@ -193,6 +223,10 @@ EOF
 else
   echo
   echo "به‌روزرسانی انجام شد. رمز مدیر عوض نشده است."
-  echo "پنل: http://${IP}:8787/${WEB_PASS}/"
-  echo "دستور مدیریت: sudo mohsen"
+  if [[ -n "${IP}" ]]; then
+    echo "این آدرس را عیناً در نوار مرورگر وارد کنید:"
+    echo "  http://${IP}:8787/${WEB_PASS}/"
+    echo "  http://${IP}/${WEB_PASS}/"
+  fi
+  echo "اطلاعات ورود: sudo mohsen"
 fi

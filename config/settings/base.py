@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     "apps.templates_engine",
     "apps.plugins",
     "apps.sites",
+    "apps.architect",
 ]
 
 MIDDLEWARE = [

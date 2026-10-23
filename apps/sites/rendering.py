@@ -54,7 +54,7 @@ def merged_demo_data(website):
     return base
 
 
-def build_environment(root: Path, url_prefix: str):
+def build_environment(root: Path, url_prefix: str, website=None):
     prefix = url_prefix.rstrip("/")
 
     def asset(path=""):
@@ -72,6 +72,9 @@ def build_environment(root: Path, url_prefix: str):
         name = str(name or "contact").strip("/")
         return f"{prefix}/_mohsen/form/{name}/"
 
+    def memar(uid, key, default=""):
+        return _memar_value(website, root, uid, key, default)
+
     env = SandboxedEnvironment(
         loader=FileSystemLoader(str(root)),
         autoescape=True,
@@ -80,7 +83,33 @@ def build_environment(root: Path, url_prefix: str):
     env.globals["asset"] = asset
     env.globals["page_url"] = page_url
     env.globals["form_action"] = form_action
+    env.globals["memar"] = memar
     return env, page_url
+
+
+def _memar_value(website, root: Path, uid, key, default=""):
+    from apps.architect.document import load_architect
+
+    uid = str(uid or "")
+    key = str(key or "")
+    overrides = {}
+    if website is not None:
+        raw = (website.settings or {}).get("memar") or {}
+        if isinstance(raw, dict):
+            node_over = raw.get(uid) or {}
+            if isinstance(node_over, dict):
+                overrides = node_over
+    value = overrides.get(key)
+    if value not in (None, ""):
+        return value
+    document = load_architect(root)
+    for node in document.get("nodes") or []:
+        if isinstance(node, dict) and node.get("uid") == uid:
+            settings = node.get("settings") or {}
+            if isinstance(settings, dict) and settings.get(key) not in (None, ""):
+                return settings.get(key)
+            break
+    return default if default is not None else ""
 
 
 def plugin_contexts(website, request):
@@ -125,7 +154,7 @@ def render_page(request, website, page_slug, url_prefix=""):
     page = next((item for item in pages if item.get("slug") == page_slug), None)
     if page is None:
         raise Http404("صفحه در قالب تعریف نشده است.")
-    env, page_url = build_environment(root, url_prefix)
+    env, page_url = build_environment(root, url_prefix, website)
     # Fix page_url so the manifest homepage also maps to root, not only "home".
     prefix = url_prefix.rstrip("/")
 

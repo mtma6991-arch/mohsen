@@ -10,31 +10,31 @@
 </head>
 <body>
   <div class="frame">
-    <header class="top">
-      <a class="brand" href="{{ page_url('home') }}">
+    <header class="top" data-memar-id="section" data-memar-uid="layout-header">
+      <a class="brand" href="{{ page_url('home') }}" data-memar-id="logo" data-memar-uid="layout-logo">
         <span class="mark"></span>
-        <span>{{ site.logo_text }}</span>
+        <span>{{ memar('layout-logo', 'text', site.logo_text) }}</span>
       </a>
-      <nav>
+      <nav data-memar-id="nav-menu" data-memar-uid="layout-nav">
         {% for item in pages if item.in_menu %}
           <a href="{{ page_url(item.slug) }}" {% if item.slug == page.slug %}aria-current="page"{% endif %}>{{ item.title }}</a>
         {% endfor %}
       </nav>
-      <a class="phone" href="tel:{{ site.phone }}">{{ site.phone }}</a>
+      <a class="phone" href="tel:{{ site.phone }}" data-memar-id="button" data-memar-uid="layout-phone">{{ memar('layout-phone', 'text', site.phone) }}</a>
     </header>
     <main>
       {% block content %}{% endblock %}
     </main>
-    <footer>
+    <footer data-memar-id="footer" data-memar-uid="layout-footer">
       <div>
-        <strong>{{ site.title }}</strong>
-        <p>{{ site.tagline }}</p>
+        <strong data-memar-id="site-title" data-memar-uid="layout-footer-title">{{ memar('layout-footer-title', 'text', site.title) }}</strong>
+        <p data-memar-id="text" data-memar-uid="layout-footer-tagline">{{ memar('layout-footer-tagline', 'text', site.tagline) }}</p>
       </div>
       <div>
-        <p>{{ site.address }}</p>
-        <p>{{ site.email }}</p>
+        <p data-memar-id="text" data-memar-uid="layout-footer-address">{{ memar('layout-footer-address', 'text', site.address) }}</p>
+        <p data-memar-id="text" data-memar-uid="layout-footer-email">{{ memar('layout-footer-email', 'text', site.email) }}</p>
       </div>
-      <small>دسته {{ site.category }}</small>
+      <small data-memar-id="text" data-memar-uid="layout-footer-category">{{ memar('layout-footer-category', 'text', 'دسته ' ~ site.category) }}</small>
     </footer>
   </div>
 </body>

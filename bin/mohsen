@@ -32,6 +32,15 @@ fi
 
 cd "$ROOT"
 export PYTHONPATH="$ROOT${PYTHONPATH:+:$PYTHONPATH}"
+
+if [[ "${1:-}" == "update" ]]; then
+  exec bash "$ROOT/deploy/update.sh"
+fi
+if [[ "${1:-}" == "uninstall" ]]; then
+  shift
+  exec bash "$ROOT/uninstall.sh" "$@"
+fi
+
 if [[ -f /etc/mohsen/mohsen.env || -n "${MOHSEN_SECRET_KEY:-}" ]]; then
   export DJANGO_SETTINGS_MODULE="${DJANGO_SETTINGS_MODULE:-config.settings.prod}"
 else

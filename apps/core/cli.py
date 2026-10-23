@@ -5,6 +5,8 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+from apps.core.access import login_snapshot, sync_credentials
+
 
 def bootstrap_django():
     from apps.core.envfile import load_env_into_os
@@ -19,42 +21,77 @@ def bootstrap_django():
 
 
 def _hr():
-    print("─" * 56)
+    print("─" * 64)
 
 
 def _banner():
     print()
-    print("╔══════════════════════════════════════════════════════╗")
+    print("╔════════════════════════════════════════════════════════════╗")
     print("║              محسن  ·  مدیریت سایت‌ساز               ║")
-    print("╚══════════════════════════════════════════════════════╝")
+    print("╚════════════════════════════════════════════════════════════╝")
+
+
+def _root():
+    return hasattr(os, "geteuid") and os.geteuid() == 0
+
+
+def _require_root():
+    if not _root():
+        print("این کار به root نیاز دارد. دستور را این‌طور اجرا کنید:  sudo mohsen")
+        return False
+    return True
+
+
+def _print_login(snapshot=None):
+    snap = snapshot or login_snapshot()
+    _hr()
+    print("ورود پنل — این آدرس را عیناً در نوار مرورگر وارد کنید")
+    if snap["urls"]:
+        for url in snap["urls"]:
+            print(f"  {url}")
+    else:
+        print("  آی‌پی قابل استفاده روی کارت شبکه پیدا نشد.")
+        print("  آدرس ساختگی نشان داده نمی‌شود، چون در مرورگر باز نمی‌شود.")
+        print("  روی سرور بررسی کنید: hostname -I")
+    print(f"  نام کاربری: {snap['username']}")
+    if snap["password"] and _root():
+        print(f"  رمز عبور:   {snap['password']}")
+    elif snap["password"]:
+        print("  رمز عبور:   (برای دیدن رمز: sudo mohsen)")
+    elif os.environ.get("DJANGO_SETTINGS_MODULE", "").endswith(".dev"):
+        print("  رمز عبور:   در توسعه محلی، اگر bootstrap شده باشد admin12345 است.")
+    else:
+        print("  رمز عبور:   در /root/mohsen-credentials.txt پیدا نشد.")
+    if snap["credentials_path"]:
+        print(f"  فایل رمز:   {snap['credentials_path']}")
+    _hr()
 
 
 def _menu():
     _banner()
+    _print_login()
     print("  1) وضعیت سیستم")
     print("  2) افزودن دامنه پنل (add domain)")
-    print("  3) نمایش اطلاعات ورود")
+    print("  3) نمایش دوباره اطلاعات ورود")
     print("  4) تغییر رمز عبور مدیر")
     print("  5) تغییر مسیر محرمانه (web pass)")
     print("  6) راه‌اندازی مجدد سرویس")
     print("  7) پشتیبان‌گیری")
     print("  8) حذف دامنه پنل")
+    print("  9) به‌روزرسانی از گیت‌هاب   sudo mohsen update")
+    print(" 10) حذف کامل پروژه         sudo mohsen uninstall --yes")
     print("  0) خروج")
     _hr()
 
 
-def _require_root():
-    if hasattr(os, "geteuid") and os.geteuid() != 0:
-        print("این کار به root نیاز دارد. دستور را این‌طور اجرا کنید:  sudo mohsen")
-        return False
-    return True
+def _project_root() -> Path:
+    return Path(__file__).resolve().parents[2]
 
 
 def status():
     from django.conf import settings
 
     from apps.categories.models import Category
-    from apps.core.models import AdminDomain
     from apps.plugins.models import PluginPackage
     from apps.sites.models import Website
 
@@ -69,6 +106,7 @@ def status():
     size = ""
     if db_path.is_file():
         size = f"{db_path.stat().st_size / 1024:.0f} KB"
+    snap = login_snapshot()
     print(f"  نسخه:          {settings.VERSION}")
     print(f"  سرویس:         {active}")
     print(f"  پورت پنل:      {settings.PANEL_PORT}")
@@ -78,27 +116,12 @@ def status():
     print(f"  قالب‌ها:       {__import__('apps.templates_engine.models', fromlist=['TemplatePackage']).TemplatePackage.objects.count()}")
     print(f"  افزونه‌ها:     {PluginPackage.objects.count()}")
     print(f"  وب‌سایت‌ها:    {Website.objects.count()}")
-    domains = list(AdminDomain.objects.values_list("domain", flat=True))
-    print("  دامنه‌های پنل: " + ("، ".join(domains) if domains else "هنوز دامنه‌ای اضافه نشده"))
-    print("  آدرس با آی‌پی: http://IP-SERVER:" + f"{settings.PANEL_PORT}/{settings.WEB_PASS}/")
-    _hr()
+    _print_login(snap)
 
 
 def show_login():
-    from django.conf import settings
-    from django.contrib.auth import get_user_model
-
     _banner()
-    users = list(get_user_model().objects.filter(is_staff=True).values_list("username", flat=True))
-    print("  رمز عبور در این صفحه نشان داده نمی‌شود (فقط هنگام نصب چاپ شده است).")
-    print(f"  کاربران مدیر: {', '.join(users) if users else '—'}")
-    print(f"  مسیر محرمانه: {settings.WEB_PASS}")
-    print(f"  پورت:          {settings.PANEL_PORT}")
-    print(f"  نمونه آدرس:    http://SERVER:{settings.PANEL_PORT}/{settings.WEB_PASS}/")
-    cred = Path("/root/mohsen-credentials.txt")
-    if cred.is_file():
-        print(f"  رونوشت نصب:    {cred}")
-    _hr()
+    _print_login()
 
 
 def add_domain():
@@ -109,8 +132,7 @@ def add_domain():
 
     if not _require_root():
         return
-    print("دامنه‌ای که می‌خواهید کنار آی‌پی، پنل را باز کند.")
-    print("مثال: panel.example.com")
+    print("دامنه‌ای که کنار آی‌پی، پنل را باز کند. مثال: panel.example.com")
     raw = input("دامنه: ").strip()
     try:
         domain = validate_admin_domain(raw)
@@ -139,13 +161,15 @@ def add_domain():
         else:
             print("certbot نصب نیست. بعداً: apt install certbot python3-certbot-nginx")
     scheme = "https" if https else "http"
-    port = settings.PANEL_PORT
     print()
-    print("دامنه ثبت شد. پنل همزمان از هر دو آدرس باز می‌شود:")
-    print(f"  آی‌پی:   http://SERVER_IP:{port}/{settings.WEB_PASS}/")
-    print(f"  دامنه:   {scheme}://{domain}/{settings.WEB_PASS}/")
-    print("رکورد DNS از نوع A را به آی‌پی همین سرور اشاره دهید.")
-    print("nginx روی پورت ۸۰ و پورت پنل همه میزبان‌ها را به برنامه می‌دهد؛ نیازی به ساخت سایت جدا برای پنل نیست.")
+    print("دامنه ثبت شد. رکورد DNS از نوع A را به آی‌پی همین سرور اشاره دهید.")
+    if https:
+        print(f"  دامنه: {scheme}://{domain}/{settings.WEB_PASS}/")
+    else:
+        print(f"  دامنه: {scheme}://{domain}/{settings.WEB_PASS}/")
+        print(f"  دامنه با پورت پنل: {scheme}://{domain}:{settings.PANEL_PORT}/{settings.WEB_PASS}/")
+    _print_login()
+    sync_credentials()
     _hr()
 
 
@@ -166,7 +190,9 @@ def remove_domain():
         return
     row = rows[int(raw) - 1]
     row.delete()
-    print(f"{row.domain} حذف شد. دسترسی با آی‌پی همچنان برقرار است.")
+    print(f"{row.domain} حذف شد.")
+    _print_login()
+    sync_credentials()
 
 
 def change_password():
@@ -193,16 +219,13 @@ def change_password():
         return
     user.set_password(password)
     user.save()
-    print(f"رمز {user.username} عوض شد.")
-    cred = Path("/root/mohsen-credentials.txt")
-    if cred.is_file():
-        print("فایل /root/mohsen-credentials.txt را دستی به‌روز کنید؛ رمز جدید آنجا نوشته نمی‌شود.")
+    sync_credentials(password=password, username=user.username)
+    print(f"رمز {user.username} عوض شد و در /root/mohsen-credentials.txt نوشته شد.")
+    _print_login()
 
 
 def change_web_pass():
     import secrets
-
-    from django.conf import settings
 
     if not _require_root():
         return
@@ -219,10 +242,16 @@ def change_web_pass():
     except Exception as exc:
         print(exc)
         return
+    os.environ["MOHSEN_WEB_PASS"] = raw
+    from django.conf import settings
+
+    settings.WEB_PASS = raw
     print("فایل‌های به‌روز شده:")
     for item in files:
         print(" ", item)
-    print(f"آدرس تازه پس از راه‌اندازی مجدد: http://SERVER:{settings.PANEL_PORT}/{raw}/")
+    sync_credentials()
+    print("آدرس تازه:")
+    _print_login()
     answer = input("سرویس الان راه‌اندازی مجدد شود؟ [Y/n]: ").strip().lower()
     if answer not in {"n", "no", "خیر"}:
         restart_service()
@@ -259,8 +288,42 @@ def backup():
     print(f"پشتیبان ساخته شد: {dest}")
 
 
+def update_project():
+    if not _require_root():
+        return
+    script = _project_root() / "deploy" / "update.sh"
+    if not script.is_file():
+        print("فایل به‌روزرسانی پیدا نشد: deploy/update.sh")
+        return
+    print("دریافت کد تازه از https://github.com/mtma6991-arch/mohsen")
+    os.execv("/bin/bash", ["bash", str(script)])
+
+
+def uninstall_project():
+    if not _require_root():
+        return
+    print("حذف کامل محسن: سرویس، سایت nginx، دستور، کد، پایگاه، رسانه، تنظیمات و فایل رمز.")
+    print("برگشت‌پذیر نیست. برای تأیید بنویسید: uninstall")
+    answer = input("تأیید: ").strip().lower()
+    if answer != "uninstall":
+        print("لغو شد.")
+        return
+    script = _project_root() / "uninstall.sh"
+    os.execv("/bin/bash", ["bash", str(script), "--yes"])
+
+
 def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
+    if argv and argv[0] == "update":
+        if not _require_root():
+            return 1
+        script = _project_root() / "deploy" / "update.sh"
+        os.execv("/bin/bash", ["bash", str(script)])
+    if argv and argv[0] == "uninstall":
+        if not _require_root():
+            return 1
+        script = _project_root() / "uninstall.sh"
+        os.execv("/bin/bash", ["bash", str(script), *argv[1:]])
     try:
         bootstrap_django()
     except Exception as exc:
@@ -272,17 +335,25 @@ def main(argv=None):
         "2": add_domain,
         "add-domain": add_domain,
         "3": show_login,
+        "login": show_login,
         "4": change_password,
         "5": change_web_pass,
         "6": restart_service,
         "7": backup,
         "8": remove_domain,
+        "9": update_project,
+        "update": update_project,
+        "10": uninstall_project,
+        "uninstall": uninstall_project,
         "status": status,
     }
     if argv:
         action = actions.get(argv[0])
         if action is None:
-            print("فرمان ناشناخته. بدون آرگومان اجرا کنید تا منو باز شود.")
+            print("فرمان ناشناخته.")
+            print("  sudo mohsen")
+            print("  sudo mohsen update")
+            print("  sudo mohsen uninstall --yes")
             return 2
         action()
         return 0

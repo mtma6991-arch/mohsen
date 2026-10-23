@@ -1,11 +1,11 @@
 {% extends "layout/base.html" %}
 {% block content %}
-<section class="page-head narrow">
-  <p class="kicker">About</p>
-  <h1>کار از روی میز طراحی شروع نمی‌شود</h1>
-  <p>خانه زرین سه میز کار دارد: طراحی، موم و پرداخت. مشتری قبل از ساخت، وزن تقریبی و زمان تحویل را مکتوب می‌گیرد. قطعه‌های ویترین هم همان مسیر را طی کرده‌اند، فقط اندازه از قبل آماده است.</p>
-  <p>{{ site.description }}</p>
-  <ul class="facts">
+<section class="page-head narrow" data-memar-id="section" data-memar-uid="about-section">
+  <p class="kicker" data-memar-id="heading" data-memar-uid="about-kicker">{{ memar('about-kicker', 'text', 'About') }}</p>
+  <h1 data-memar-id="heading" data-memar-uid="about-title">{{ memar('about-title', 'text', 'کار از روی میز طراحی شروع نمی‌شود') }}</h1>
+  <p data-memar-id="text" data-memar-uid="about-body">{{ memar('about-body', 'text', 'خانه زرین سه میز کار دارد: طراحی، موم و پرداخت. مشتری قبل از ساخت، وزن تقریبی و زمان تحویل را مکتوب می‌گیرد. قطعه‌های ویترین هم همان مسیر را طی کرده‌اند، فقط اندازه از قبل آماده است.') }}</p>
+  <p data-memar-id="text" data-memar-uid="about-description">{{ memar('about-description', 'text', site.description) }}</p>
+  <ul class="facts" data-memar-id="icon-list" data-memar-uid="about-facts">
     <li>تعمیر زنجیر و قفل برای قطعه‌های خود کارگاه</li>
     <li>فاکتور با ذکر عیار</li>
     <li>ملاقات با وقت قبلی، {{ site.address }}</li>

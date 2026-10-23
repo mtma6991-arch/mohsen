@@ -1,12 +1,12 @@
 {% extends "layout/base.html" %}
 {% block content %}
-<section class="page-head">
-  <p class="kicker">Contact</p>
-  <h1>برای سفارش بنویسید</h1>
-  <p>{{ site.phone }} · {{ site.email }}</p>
+<section class="page-head" data-memar-id="section" data-memar-uid="contact-head">
+  <p class="kicker" data-memar-id="heading" data-memar-uid="contact-kicker">{{ memar('contact-kicker', 'text', 'Contact') }}</p>
+  <h1 data-memar-id="heading" data-memar-uid="contact-title">{{ memar('contact-title', 'text', 'برای سفارش بنویسید') }}</h1>
+  <p data-memar-id="text" data-memar-uid="contact-meta">{{ memar('contact-meta', 'text', site.phone ~ ' · ' ~ site.email) }}</p>
 </section>
 <section class="contact-grid">
-  <form method="post" action="{{ form_action('contact') }}" class="form">
+  <form method="post" action="{{ form_action('contact') }}" class="form" data-memar-id="contact-form" data-memar-uid="contact-form-main">
     {% if sent %}<p class="ok">پیام رسید. اگر افزونه پیامک روی این دسته فعال باشد، مدیر خبردار می‌شود.</p>{% endif %}
     <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
     <input type="text" name="company_website" tabindex="-1" autocomplete="off" class="hp" aria-hidden="true">
@@ -14,12 +14,12 @@
     <label>تلفن<input name="phone"></label>
     <label>ایمیل<input name="email" type="email"></label>
     <label>پیام<textarea name="message" rows="5" required></textarea></label>
-    <button type="submit">ارسال به کارگاه</button>
+    <button type="submit" data-memar-id="button" data-memar-uid="contact-submit">{{ memar('contact-submit', 'text', 'ارسال به کارگاه') }}</button>
   </form>
-  <aside>
-    <h2>بازدید</h2>
-    <p>{{ site.address }}</p>
-    <p>ساعت کار نمونه: شنبه تا چهارشنبه، ۱۲ تا ۱۹</p>
+  <aside data-memar-id="section" data-memar-uid="contact-aside">
+    <h2 data-memar-id="heading" data-memar-uid="contact-aside-title">{{ memar('contact-aside-title', 'text', 'بازدید') }}</h2>
+    <p data-memar-id="text" data-memar-uid="contact-address">{{ memar('contact-address', 'text', site.address) }}</p>
+    <p data-memar-id="text" data-memar-uid="contact-hours">{{ memar('contact-hours', 'text', 'ساعت کار نمونه: شنبه تا چهارشنبه، ۱۲ تا ۱۹') }}</p>
   </aside>
 </section>
 {% endblock %}

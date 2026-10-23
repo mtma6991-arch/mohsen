@@ -9,19 +9,25 @@
   {{ plugins_head }}
 </head>
 <body>
-  <header class="bar">
-    <a class="logo" href="{{ page_url('home') }}">{{ site.logo_text }}</a>
-    <nav>
+  <header class="bar" data-memar-id="section" data-memar-uid="layout-header">
+    <a class="logo" href="{{ page_url('home') }}" data-memar-id="logo" data-memar-uid="layout-logo">{{ memar('layout-logo', 'text', site.logo_text) }}</a>
+    <nav data-memar-id="nav-menu" data-memar-uid="layout-nav">
       {% for item in pages if item.in_menu %}
         <a href="{{ page_url(item.slug) }}" {% if item.slug == page.slug %}aria-current="page"{% endif %}>{{ item.title }}</a>
       {% endfor %}
     </nav>
-    <a class="call" href="tel:{{ site.phone }}">{{ site.phone or "تماس" }}</a>
+    <a class="call" href="tel:{{ site.phone }}" data-memar-id="button" data-memar-uid="layout-phone">{{ memar('layout-phone', 'text', site.phone or 'تماس') }}</a>
   </header>
   <main>{% block content %}{% endblock %}</main>
-  <footer>
-    <div><strong>{{ site.title }}</strong><p>{{ site.address }}</p></div>
-    <div><p>{{ site.email }}</p><p>دسته {{ site.category }}</p></div>
+  <footer data-memar-id="footer" data-memar-uid="layout-footer">
+    <div>
+      <strong data-memar-id="site-title" data-memar-uid="layout-footer-title">{{ memar('layout-footer-title', 'text', site.title) }}</strong>
+      <p data-memar-id="text" data-memar-uid="layout-footer-address">{{ memar('layout-footer-address', 'text', site.address) }}</p>
+    </div>
+    <div>
+      <p data-memar-id="text" data-memar-uid="layout-footer-email">{{ memar('layout-footer-email', 'text', site.email) }}</p>
+      <p data-memar-id="text" data-memar-uid="layout-footer-category">{{ memar('layout-footer-category', 'text', 'دسته ' ~ site.category) }}</p>
+    </div>
   </footer>
 </body>
 </html>

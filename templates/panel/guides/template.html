@@ -3,14 +3,27 @@
 {% block heading %}راهنمای کدنویسی زیپ قالب{% endblock %}
 {% block content %}
 <article class="card guide">
-  <p>قالب یک فایل زیپ است که پنل آن را استخراج، اعتبارسنجی و به یک دسته وصل می‌کند. سایت‌های آن دسته می‌توانند همین قالب را انتخاب کنند. موتور رندر <strong>Jinja2 سندباکس</strong> است؛ کد پایتون داخل قالب اجرا نمی‌شود.</p>
+  <p>قالب یک فایل زیپ است که پنل آن را استخراج، اعتبارسنجی و به یک دسته وصل می‌کند. موتور رندر <strong>Jinja2 سندباکس</strong> است. از این نسخه، هر قالب باید بر پایه صفحه‌ساز <strong>معمار</strong> باشد تا مشتری بعداً همان سایت را بدون به‌هم‌ریختن طرح، از داخل پنل ویرایش کند.</p>
   <p>
     <a class="btn" href="{% url 'template-example' 'jewelry' %}">نمونه جواهر</a>
     <a class="btn" href="{% url 'template-example' 'phones' %}">نمونه گوشی</a>
   </p>
+
+  <h2>اصل معمار</h2>
+  <p>معمار کاتالوگ ثابت المان‌های ساخت وب است، شبیه ویجت‌های المنتور. هر المان یک <code>id</code> پایدار دارد. هر جای استفاده در قالب یک <code>uid</code> یکتا دارد. مشتری در صفحه سایت، دکمه «ویرایش با معمار» را می‌زند و همان uidها را ویرایش می‌کند. اگر قالب خارج از این شناسه‌ها ساخته شود، زیپ رد می‌شود.</p>
+  <ul>
+    <li>فایل <code>architect.json</code> در ریشه زیپ اجباری است و <code>"builder": "memar"</code> دارد.</li>
+    <li>هر گره <code>id</code> باید یکی از ۵۰ شناسه زیر باشد. شناسه تازه اختراع نکنید.</li>
+    <li>در HTML، هر المان قابل ویرایش این دو ویژگی را با هم، روی همان برچسب، دارد: <code dir="ltr">data-memar-id</code> و <code dir="ltr">data-memar-uid</code>.</li>
+    <li>متنی که مشتری باید عوض کند با <code dir="ltr">memar('uid', 'text', مقدارپیش‌فرض)</code> چاپ می‌شود. اگر مشتری چیزی ذخیره نکرده باشد، همان پیش‌فرض دیده می‌شود.</li>
+    <li>هر صفحه مانیفست حداقل یک المان دارد. <code>layout/base.html</code> با صفحه <code>layout</code> در سند ثبت می‌شود.</li>
+    <li>فهرست کالا و داده تکراری در <code>demo_data</code> می‌ماند. عنوان و پوسته همان فهرست، المان معمار است (مثل <code>product-grid</code>).</li>
+  </ul>
+
   <h2>ساختار زیپ</h2>
   <div class="filetree" dir="ltr">
     template.json<br>
+    architect.json<br>
     layout/base.html<br>
     pages/home.html<br>
     pages/about.html<br>
@@ -18,7 +31,8 @@
     assets/style.css<br>
     assets/fonts/…<br>
   </div>
-  <p>اگر همه چیز داخل یک پوشه باشد هم قبول است، به شرطی که <code>template.json</code> در همان پوشه باشد. مسیرهای <code>..</code>، لینک نمادین و پسوندهای غیرمجاز رد می‌شوند.</p>
+  <p>اگر همه چیز داخل یک پوشه باشد هم قبول است، به شرطی که <code>template.json</code> و <code>architect.json</code> در همان پوشه باشند. مسیر <code>..</code>، لینک نمادین و پسوند غیرمجاز رد می‌شود.</p>
+
   <h2>template.json</h2>
   <pre>{
   "name": "آتلیه زرین",
@@ -28,55 +42,71 @@
   "description": "یک خط توضیح",
   "homepage": "home",
   "pages": [
-    {"slug": "home", "title": "خانه", "file": "pages/home.html", "in_menu": true},
-    {"slug": "contact", "title": "تماس", "file": "pages/contact.html", "in_menu": true}
+    {"slug": "home", "title": "خانه", "file": "pages/home.html", "in_menu": true}
   ],
   "demo_data": {"products": [{"name": "گردنبند", "price": "۱۰۰۰", "note": "", "metal": "طلا"}]}
 }</pre>
+
+  <h2>architect.json</h2>
+  <pre>{
+  "builder": "memar",
+  "version": "1.0",
+  "nodes": [
+    {"uid": "home-hero", "id": "hero", "page": "home", "settings": {}},
+    {"uid": "home-title", "id": "heading", "page": "home", "parent": "home-hero", "settings": {}}
+  ]
+}</pre>
   <ul>
-    <li><code>slug</code> قالب و صفحات فقط حروف کوچک انگلیسی، عدد و خط تیره.</li>
-    <li><code>file</code> باید به <code>.html</code> ختم شود و داخل زیپ وجود داشته باشد.</li>
-    <li><code>homepage</code> یکی از slugهای صفحات است. همان صفحه روی <code>/</code> باز می‌شود.</li>
-    <li><code>demo_data</code> داده نمونه است. در ویرایش سایت، با «محتوای اختصاصی JSON» قابل جایگزینی است.</li>
+    <li><code>uid</code> یکتا، فقط حروف کوچک انگلیسی، عدد و خط تیره.</li>
+    <li><code>id</code> شناسه کاتالوگ. <code>page</code> یا slug صفحه است یا <code>layout</code>.</li>
+    <li><code>parent</code> اختیاری است و فقط وقتی والد در کاتالوگ فرزند می‌پذیرد.</li>
+    <li><code>settings</code> فقط کلیدهایی که همان المان در کاتالوگ دارد. مقدار خالی یعنی «از پیش‌فرض قالب استفاده کن».</li>
   </ul>
+
+  <h2>نمونه برچسب</h2>
+  <pre>{% verbatim %}<section data-memar-id="hero" data-memar-uid="home-hero">
+  <h1 data-memar-id="heading" data-memar-uid="home-title">{{ memar('home-title', 'text', site.title) }}</h1>
+  <a data-memar-id="button" data-memar-uid="home-cta" href="{{ page_url('contact') }}">{{ memar('home-cta', 'text', 'تماس') }}</a>
+</section>{% endverbatim %}</pre>
+  <p>فرم تماس پلتفرم باید المان <code>contact-form</code> باشد و همچنان به <code>form_action('contact')</code> پست شود.</p>
+
+  <h2>۵۰ المان معمار</h2>
+  <p>همین فهرست را در زیپ رعایت کنید. نام فارسی برای پنل مشتری است؛ در کد فقط ستون شناسه را بنویسید.</p>
+  {% for group_id, group_label in groups %}
+    <h3>{{ group_label }}</h3>
+    <table>
+      <tr><th>شناسه</th><th>نام</th><th>فرزند</th></tr>
+      {% for element in elements %}
+        {% if element.group == group_id %}
+          <tr>
+            <td dir="ltr">{{ element.id }}</td>
+            <td>{{ element.name }}</td>
+            <td>{% if element.accepts_children %}بله{% else %}خیر{% endif %}</td>
+          </tr>
+        {% endif %}
+      {% endfor %}
+    </table>
+  {% endfor %}
+
   <h2>متغیرهای قالب</h2>
   <table>
     <tr><th>عبارت</th><th>معنی</th></tr>
     <tr><td dir="ltr">site.title / tagline / phone / email / address / logo_text / domain</td><td>مشخصات همان مشتری</td></tr>
-    <tr><td dir="ltr">site.category</td><td>نام دسته</td></tr>
-    <tr><td dir="ltr">site.accent_color</td><td>رنگ سایت یا رنگ دسته</td></tr>
-    <tr><td dir="ltr">page.slug / page.title</td><td>صفحه جاری</td></tr>
-    <tr><td dir="ltr">pages</td><td>فهرست صفحات مانیفست برای منو</td></tr>
-    <tr><td dir="ltr">data</td><td>ادغام demo_data و محتوای اختصاصی سایت</td></tr>
-    <tr><td dir="ltr">plugins.<slug></td><td>خروجی افزونه‌های فعالِ دسته</td></tr>
-    <tr><td dir="ltr">asset('style.css')</td><td>آدرس فایل داخل assets</td></tr>
-    <tr><td dir="ltr">page_url('about')</td><td>پیوند صفحه؛ خانه به / می‌رود</td></tr>
-    <tr><td dir="ltr">form_action('contact')</td><td>مقصد فرم تماس پلتفرم</td></tr>
-    <tr><td dir="ltr">csrf_token</td><td>توکن فرم</td></tr>
-    <tr><td dir="ltr">sent</td><td>بعد از ارسال موفق فرم true است</td></tr>
+    <tr><td dir="ltr">page / pages / data</td><td>صفحه جاری، منو، و ادغام demo_data با محتوای اختصاصی</td></tr>
+    <tr><td dir="ltr">memar('uid', 'text', پیش‌فرض)</td><td>مقدار ویرایش‌شده معمار، وگرنه پیش‌فرض</td></tr>
+    <tr><td dir="ltr">asset() / page_url() / form_action() / csrf_token / sent</td><td>دارایی، پیوند، فرم و وضعیت ارسال</td></tr>
+    <tr><td dir="ltr">plugins.<slug></td><td>خروجی افزونه فعال همان دسته</td></tr>
   </table>
-  <h2>فرم تماس</h2>
-  <pre>{% verbatim %}<form method="post" action="{{ form_action('contact') }}">
-  <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
-  <input class="hp" name="company_website" tabindex="-1" autocomplete="off">
-  <input name="name" required>
-  <textarea name="message" required></textarea>
-</form>{% endverbatim %}</pre>
-  <p>فیلد مخفی <code>company_website</code> تله ربات است. پیام در پنل همان سایت ذخیره می‌شود و هوک افزونه‌ها (مثل پیامک) صدا زده می‌شود.</p>
-  <h2>افزونه‌ها داخل قالب</h2>
-  <pre>{% verbatim %}{% if plugins.page_builder and plugins.page_builder.active %}
-  {{ plugins.page_builder.html }}
-{% endif %}{% endverbatim %}</pre>
-  <p>اگر دسته آن افزونه را نداشته باشد، شرط برقرار نمی‌شود و طرح پیش‌فرض قالب می‌ماند. برای پیامک چیزی را در صفحه چاپ نکنید؛ کلید API هرگز به قالب نمی‌رسد.</p>
-  <h2>قواعد ایمنی که پنل چک می‌کند</h2>
+
+  <h2>قواعدی که پنل رد می‌کند</h2>
   <ul>
-    <li>حداکثر حدود ۸۰ مگابایت زیپ و ۲۰۰ مگابایت پس از باز شدن.</li>
-    <li>پسوند مجاز: html, css, js, json, svg, png, jpg, jpeg, webp, gif, ico, woff, woff2, txt, md, map, webmanifest.</li>
-    <li>فایل py داخل قالب رد می‌شود.</li>
-    <li>نحو Jinja قبل از ذخیره کامپایل می‌شود. خطا همان لحظه نشان داده می‌شود.</li>
-    <li>اتو-اسکیپ روشن است. HTML خام مهمان را تزریق نکنید.</li>
+    <li>نبود <code>architect.json</code> یا <code>builder</code> غیر از <code>memar</code>.</li>
+    <li>شناسه المان خارج از کاتالوگ، uid تکراری، یا uid که در HTML نیست.</li>
+    <li>برچسبی که فقط یکی از <code>data-memar-id</code> یا <code>data-memar-uid</code> را دارد.</li>
+    <li>ناهماهنگی شناسه بین HTML و <code>architect.json</code>.</li>
+    <li>صفحه بدون المان معمار.</li>
+    <li>زیپ بالای حدود ۸۰ مگابایت، فایل py، مسیر <code>..</code>، یا نحو خراب Jinja.</li>
   </ul>
-  <h2>حداقل قالب سالم</h2>
-  <p>یک <code>pages/home.html</code> که از <code>layout/base.html</code> ارث می‌برد کافی است. نمونه کامل را دانلود کنید و فقط متن و CSS را عوض کنید؛ سپس زیپ را در «قالب‌ها» برای دسته مورد نظر بارگذاری کنید.</p>
+  <p>نسخه مخزن همین راهنما: <code>docs/template-zip-guide.md</code>. نمونه‌های آماده را دانلود کنید و فقط متن، رنگ و گره‌های معمار را عوض کنید.</p>
 </article>
 {% endblock %}

@@ -6,6 +6,7 @@
 {% if mode == "edit" %}
   <div class="toolbar">
     <a class="btn" target="_blank" href="/_preview/{{ obj.domain }}/">باز کردن پیش‌نمایش</a>
+    <a class="btn" href="{% url 'site-memar' obj.pk %}">ویرایش با معمار</a>
     <span class="muted">برای دامنه واقعی، رکورد A را به آی‌پی همین سرور بدهید. پیشوند www هم به همین سایت می‌رسد.</span>
   </div>
 {% endif %}

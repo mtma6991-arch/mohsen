@@ -1,5 +1,6 @@
 from django.urls import path
 
+from apps.architect import views as architect_views
 from apps.categories import views as category_views
 from apps.core import views as core_views
 from apps.plugins import views as plugin_views
@@ -35,6 +36,7 @@ urlpatterns = [
     path("sites/", site_views.site_list, name="site-list"),
     path("sites/new/", site_views.site_create, name="site-create"),
     path("sites/<int:pk>/", site_views.site_edit, name="site-edit"),
+    path("sites/<int:pk>/memar/", architect_views.site_memar, name="site-memar"),
     path("sites/<int:pk>/delete/", site_views.site_delete, name="site-delete"),
     path("messages/<int:pk>/delete/", site_views.message_delete, name="message-delete"),
 ]
