@@ -10,7 +10,6 @@
 - افزونه فایل پایتون است. انتساب افزونه به دسته است (`CategoryPlugin`). سایت‌ها افزونه را ارث می‌برند.
 - پیش‌نمایش قبل از DNS: `/_preview/<domain>/` فقط برای مدیر واردشده.
 - فرم‌های عمومی به `/_mohsen/form/<name>/` می‌روند، پیام ذخیره می‌شود و قلاب افزونه‌ها اجرا می‌شود.
-- TLS خودکار در `apps/tls` است. acme.sh گواهی را می‌گیرد، nginx با SNI همان فایل را برای آن دامنه برمی‌گزیند. جزئیات در [tls.md](tls.md).
 
 مسیرهای مهم روی سرور:
 
@@ -18,8 +17,5 @@
 | --- | --- |
 | `/opt/mohsen` | کد |
 | `/etc/mohsen/mohsen.env` | رمزها و web pass |
-| `/etc/mohsen/ssl` | گواهی دامنه و نقشه nginx |
-| `/var/lib/mohsen-acme` | وب‌روت چالش Let’s Encrypt |
 | `/var/lib/mohsen` | sqlite و رسانه |
-| `/root/.acme.sh` | کلاینت و حساب ACME |
 | `/root/mohsen-credentials.txt` | رونوشت چاپ‌شده نصب |

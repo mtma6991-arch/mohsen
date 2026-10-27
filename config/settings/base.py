@@ -27,7 +27,6 @@ INSTALLED_APPS = [
     "apps.templates_engine",
     "apps.plugins",
     "apps.sites",
-    "apps.tls",
     "apps.architect",
 ]
 
@@ -36,7 +35,6 @@ MIDDLEWARE = [
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
-    "apps.core.middleware.DynamicCsrfMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -82,13 +80,6 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 MEDIA_URL = "/media/"
 MEDIA_ROOT = Path(env("MOHSEN_MEDIA_ROOT", str(BASE_DIR / "media")))
 DATA_DIR = Path(env("MOHSEN_DATA_DIR", str(BASE_DIR / "data")))
-TLS_ACME_HOME = Path(env("MOHSEN_ACME_HOME", "/root/.acme.sh"))
-TLS_SSL_DIR = Path(env("MOHSEN_SSL_DIR", "/etc/mohsen/ssl"))
-TLS_WEBROOT = Path(env("MOHSEN_ACME_WEBROOT", "/var/lib/mohsen-acme"))
-TLS_SOCK = env("MOHSEN_TLS_SOCK", "/run/mohsen/tls.sock")
-TLS_ACME_SERVER = env("MOHSEN_ACME_SERVER", "letsencrypt") or "letsencrypt"
-TLS_EMAIL = env("MOHSEN_ACME_EMAIL", "")
-TLS_DNS_RESOLVERS = env("MOHSEN_DNS_RESOLVERS", "")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -108,7 +99,6 @@ SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_HTTPONLY = False
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "SAMEORIGIN"
-USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 _origins = [o.strip() for o in env("MOHSEN_CSRF_TRUSTED_ORIGINS", "").split(",") if o.strip()]

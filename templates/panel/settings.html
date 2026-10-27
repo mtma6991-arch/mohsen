@@ -1,44 +1,28 @@
 {% extends "panel/base.html" %}
 {% load panel_tags %}
 {% block title %}تنظیمات{% endblock %}
-{% block heading %}محل پنل و دامنه‌ها{% endblock %}
+{% block heading %}محل پنل{% endblock %}
 {% block content %}
 <div class="layout">
   <div class="card">
     <h2>آدرس‌ها</h2>
-    <p>پنل با ترکیب <strong>آی‌پی + پورت + مسیر محرمانه</strong> یا با <strong>دامنه پنل</strong> باز می‌شود. مسیر در صفحه عمومی سایت‌ها نشان داده نمی‌شود.</p>
+    <p>پنل با ترکیب <strong>آی‌پی + پورت + مسیر محرمانه</strong> باز می‌شود. مسیر در صفحه عمومی سایت‌ها نشان داده نمی‌شود.</p>
     <p>پورت: <strong dir="ltr">{{ PANEL_PORT }}</strong></p>
     <p>مسیر محرمانه: <code dir="ltr">/{{ WEB_PASS }}/</code></p>
-    <hr style="border:0;border-top:1px solid var(--line);margin:1rem 0">
-    <h2>افزودن دامنه پنل</h2>
-    <form method="post" class="form-card">
-      {% csrf_token %}
-      <input type="hidden" name="action" value="add-panel">
-      <label>دامنه پنل
-        <input name="domain" dir="ltr" placeholder="panel.example.com" required>
-      </label>
-      <button class="btn" type="submit">ثبت دامنه پنل و صدور TLS</button>
-    </form>
-    <h2 style="margin-top:1.2rem">دامنه‌های ثبت‌شده پنل</h2>
+    <p dir="ltr">http://SERVER:{{ PANEL_PORT }}/{{ WEB_PASS }}/</p>
+    <h2>دامنه‌های اضافه‌شده</h2>
     {% for domain in domains %}
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;margin:.5rem 0">
-        <span dir="ltr">{% if domain.https %}https{% else %}http{% endif %}://{{ domain.domain }}/{{ WEB_PASS }}/ {% if domain.is_primary %}· اصلی{% endif %}</span>
-        <form method="post" style="display:inline">{% csrf_token %}
-          <input type="hidden" name="action" value="remove-panel">
-          <input type="hidden" name="domain" value="{{ domain.domain }}">
-          <button class="danger" type="submit">حذف</button>
-        </form>
-      </div>
+      <p dir="ltr">{% if domain.https %}https{% else %}http{% endif %}://{{ domain.domain }}/{{ WEB_PASS }}/ {% if domain.is_primary %}· اصلی{% endif %}</p>
     {% empty %}
-      <p class="muted">هنوز دامنه‌ای برای پنل ثبت نشده است.</p>
+      <p class="muted">هنوز دامنه‌ای برای پنل ثبت نشده. روی سرور دستور <code>sudo mohsen</code> را بزنید و گزینه «افزودن دامنه پنل (add domain)» را انتخاب کنید. بعد از آن، هم آی‌پی و هم دامنه کار می‌کنند.</p>
     {% endfor %}
   </div>
   <div class="card">
     <h2>دستور مدیریت</h2>
     <p>بعد از نصب، در ترمینال سرور:</p>
     <pre>sudo mohsen</pre>
-    <p class="hint">گزینه‌ها شامل وضعیت، افزودن دامنه پنل، نمایش اطلاعات ورود، تغییر رمز، تغییر مسیر محرمانه، راه‌اندازی مجدد و پشتیبان هستند.</p>
-    <p><a class="btn" href="{% url 'tls-home' %}">مدیریت گواهی‌های TLS</a> <a class="ghost" href="{% url 'password' %}">تغییر رمز پنل</a></p>
+    <p class="hint">گزینه‌ها شامل وضعیت، add domain، نمایش اطلاعات ورود، تغییر رمز، تغییر web pass، راه‌اندازی مجدد و پشتیبان هستند.</p>
+    <p><a href="{% url 'password' %}">تغییر رمز از داخل پنل</a></p>
     {% if debug %}<p class="hint">این محیط توسعه است. ورود نمونه اگر کاربر دیگری نباشد: admin / admin12345</p>{% endif %}
   </div>
 </div>

@@ -4,16 +4,7 @@ import sys
 
 
 def main():
-    try:
-        from apps.core.envfile import load_env_into_os
-
-        load_env_into_os()
-    except Exception:
-        pass
-    if os.environ.get("MOHSEN_SECRET_KEY"):
-        os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.prod")
-    else:
-        os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.dev")
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.dev")
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:
