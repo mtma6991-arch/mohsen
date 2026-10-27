@@ -1,0 +1,12 @@
+[Unit]
+Description=Retry and renew Mohsen TLS certificates
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=30min
+AccuracySec=1min
+Persistent=true
+RandomizedDelaySec=90
+
+[Install]
+WantedBy=timers.target

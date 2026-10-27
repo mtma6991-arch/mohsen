@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     "apps.templates_engine",
     "apps.plugins",
     "apps.sites",
+    "apps.tls",
     "apps.architect",
 ]
 
@@ -80,6 +81,16 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 MEDIA_URL = "/media/"
 MEDIA_ROOT = Path(env("MOHSEN_MEDIA_ROOT", str(BASE_DIR / "media")))
 DATA_DIR = Path(env("MOHSEN_DATA_DIR", str(BASE_DIR / "data")))
+TLS_ACME_HOME = Path(env("MOHSEN_ACME_HOME", "/root/.acme.sh"))
+TLS_SSL_DIR = Path(env("MOHSEN_SSL_DIR", "/etc/mohsen/ssl"))
+TLS_WEBROOT = Path(env("MOHSEN_ACME_WEBROOT", "/var/lib/mohsen-acme"))
+TLS_SOCK = env("MOHSEN_TLS_SOCK", "/run/mohsen/tls.sock")
+TLS_ACME_SERVER = env("MOHSEN_ACME_SERVER", "letsencrypt") or "letsencrypt"
+TLS_EMAIL = env("MOHSEN_ACME_EMAIL", "")
+# resolverهای DNS اضافی (با کاما یا فاصله جدا) که قبل از لیست پیش‌فرض
+# (شکن، 403online، الکترو، Cloudflare، Google، Quad9) امتحان می‌شوند؛
+# برای وقتی resolver سیستم روی این سرور خاص قابل‌اعتماد نیست.
+TLS_DNS_RESOLVERS = env("MOHSEN_DNS_RESOLVERS", "")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

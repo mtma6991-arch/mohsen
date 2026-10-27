@@ -1,0 +1,20 @@
+[Unit]
+Description=Mohsen TLS issuance socket
+After=network.target nginx.service mohsen.service
+Wants=mohsen.service
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/opt/mohsen
+EnvironmentFile=-/etc/mohsen/mohsen.env
+Environment=MOHSEN_ROOT=/opt/mohsen
+Environment=MOHSEN_TLS_SOCK=/run/mohsen/tls.sock
+ExecStart=/opt/mohsen/.venv/bin/python /opt/mohsen/bin/mohsen-tlsd
+RuntimeDirectory=mohsen
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

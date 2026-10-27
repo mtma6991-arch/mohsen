@@ -37,7 +37,7 @@ CRED=/root/mohsen-credentials.txt
 
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
-apt-get install -y python3 python3-venv python3-pip python3-dev build-essential nginx curl ca-certificates rsync
+apt-get install -y python3 python3-venv python3-pip python3-dev build-essential nginx curl ca-certificates rsync openssl socat
 
 PY=python3
 if ! "$PY" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 10) else 1)'; then
@@ -49,7 +49,8 @@ if ! id mohsen >/dev/null 2>&1; then
   useradd --system --home "$APP" --shell /usr/sbin/nologin mohsen
 fi
 
-mkdir -p "$APP" "$ENV_DIR" "$DATA_DIR/media" /var/log/mohsen /var/backups/mohsen
+mkdir -p "$APP" "$ENV_DIR" "$DATA_DIR/media" /var/log/mohsen /var/backups/mohsen /var/lib/mohsen-acme /etc/mohsen/ssl/_default
+chmod 755 /var/lib/mohsen-acme /etc/mohsen /etc/mohsen/ssl /etc/mohsen/ssl/_default
 rsync -a --delete \
   --exclude '.git' \
   --exclude '.venv' \
@@ -74,6 +75,11 @@ else
   FIRST_INSTALL=0
 fi
 
+OLD_ENV_BACKUP=""
+if [[ -f "$ENV_FILE" ]]; then
+  OLD_ENV_BACKUP="$(cat "$ENV_FILE")"
+fi
+
 DB_URL_LINE=""
 if [[ "$USE_POSTGRES" -eq 1 ]]; then
   apt-get install -y postgresql postgresql-contrib libpq-dev
@@ -83,6 +89,11 @@ if [[ "$USE_POSTGRES" -eq 1 ]]; then
   sudo -u postgres psql -tc "SELECT 1 FROM pg_database WHERE datname='mohsen'" | grep -q 1 || \
     sudo -u postgres psql -c "CREATE DATABASE mohsen OWNER mohsen"
   DB_URL_LINE="DATABASE_URL=postgresql://mohsen:${PG_PASS}@127.0.0.1:5432/mohsen"
+elif [[ -n "$OLD_ENV_BACKUP" ]]; then
+  EXISTING_DB="$(printf '%s\n' "$OLD_ENV_BACKUP" | grep -E '^DATABASE_URL=' | head -n 1 || true)"
+  if [[ -n "$EXISTING_DB" ]]; then
+    DB_URL_LINE="$EXISTING_DB"
+  fi
 fi
 
 cat > "$ENV_FILE" <<EOF
@@ -98,6 +109,20 @@ MOHSEN_STATIC_ROOT=${APP}/staticfiles
 DJANGO_SETTINGS_MODULE=config.settings.prod
 ${DB_URL_LINE}
 EOF
+if [[ -n "$OLD_ENV_BACKUP" ]]; then
+  while IFS= read -r line; do
+    [[ "$line" == *=* ]] || continue
+    key="${line%%=*}"
+    case "$key" in
+      ""|\#*) continue ;;
+      MOHSEN_SECRET_KEY|MOHSEN_WEB_PASS|MOHSEN_PORT|MOHSEN_ADMIN_USER|MOHSEN_DEBUG|MOHSEN_HTTPS|MOHSEN_DATA_DIR|MOHSEN_MEDIA_ROOT|MOHSEN_STATIC_ROOT|DJANGO_SETTINGS_MODULE|DATABASE_URL|MOHSEN_ADMIN_PASSWORD|MOHSEN_ADMIN_RESET)
+        ;;
+      *)
+        grep -qF "${key}=" "$ENV_FILE" || printf '%s\n' "$line" >> "$ENV_FILE"
+        ;;
+    esac
+  done <<<"$OLD_ENV_BACKUP"
+fi
 chown root:mohsen "$ENV_FILE"
 chmod 640 "$ENV_FILE"
 cp "$ENV_FILE" "$APP/mohsen.env"
@@ -145,9 +170,45 @@ install -m 0755 "$APP/bin/mohsen" /usr/local/bin/mohsen
 ln -sfn /usr/local/bin/mohsen /usr/local/bin/Mohsen
 
 install -m 0644 "$APP/deploy/systemd/mohsen.service" /etc/systemd/system/mohsen.service
+install -m 0644 "$APP/deploy/systemd/mohsen-tlsd.service" /etc/systemd/system/mohsen-tlsd.service
+install -m 0644 "$APP/deploy/systemd/mohsen-tls.service" /etc/systemd/system/mohsen-tls.service
+install -m 0644 "$APP/deploy/systemd/mohsen-tls.timer" /etc/systemd/system/mohsen-tls.timer
 systemctl daemon-reload
 systemctl enable mohsen
 systemctl restart mohsen
+systemctl enable mohsen-tlsd
+systemctl restart mohsen-tlsd || echo "هشدار: سرویس صدور TLS بالا نیامد. journalctl -u mohsen-tlsd"
+systemctl enable --now mohsen-tls.timer || echo "هشدار: تایمر TLS فعال نشد."
+
+NGINX_GROUP="www-data"
+if ! getent group www-data >/dev/null 2>&1 && getent group nginx >/dev/null 2>&1; then
+  NGINX_GROUP="nginx"
+fi
+if [[ ! -f /etc/mohsen/ssl/_default/fullchain.pem || ! -f /etc/mohsen/ssl/_default/privkey.pem ]]; then
+  openssl req -x509 -nodes -newkey rsa:2048 -days 825 \
+    -keyout /etc/mohsen/ssl/_default/privkey.pem \
+    -out /etc/mohsen/ssl/_default/fullchain.pem \
+    -subj "/CN=mohsen-default" >/dev/null 2>&1
+fi
+touch /etc/mohsen/ssl/cert.map /etc/mohsen/ssl/key.map /etc/mohsen/ssl/redirect.map
+chgrp -R "$NGINX_GROUP" /etc/mohsen/ssl || true
+chmod 750 /etc/mohsen/ssl /etc/mohsen/ssl/_default
+chmod 640 /etc/mohsen/ssl/_default/fullchain.pem /etc/mohsen/ssl/_default/privkey.pem
+chmod 644 /etc/mohsen/ssl/cert.map /etc/mohsen/ssl/key.map /etc/mohsen/ssl/redirect.map
+
+if [[ ! -x /root/.acme.sh/acme.sh ]]; then
+  ACME_EMAIL="${MOHSEN_ACME_EMAIL:-}"
+  if [[ -z "$ACME_EMAIL" ]]; then
+    HN="$(hostname -f 2>/dev/null || hostname 2>/dev/null || true)"
+    if [[ "$HN" == *.* && "$HN" != "localhost" && "$HN" != *localhost* ]]; then
+      ACME_EMAIL="admin@${HN}"
+    else
+      ACME_EMAIL="admin@mohsen.invalid"
+    fi
+  fi
+  curl -fsSL https://get.acme.sh | sh -s -- --install-online -m "$ACME_EMAIL" --nocron --home /root/.acme.sh \
+    || echo "هشدار: acme.sh نصب نشد. بعد از وصل شدن اینترنت، sudo bash install.sh را تکرار کنید."
+fi
 
 install -m 0644 "$APP/deploy/nginx/mohsen.conf" /etc/nginx/sites-available/mohsen.conf
 ln -sfn /etc/nginx/sites-available/mohsen.conf /etc/nginx/sites-enabled/mohsen.conf

@@ -27,6 +27,7 @@ if [[ "$YES" -ne 1 ]]; then
   echo "  سرویس systemd، پیکربندی nginx همین برنامه، دستور mohsen"
   echo "  کد /opt/mohsen"
   echo "  داده و رسانه /var/lib/mohsen"
+  echo "  گواهی‌ها /etc/mohsen/ssl و کلاینت /root/.acme.sh و وب‌روت /var/lib/mohsen-acme"
   echo "  تنظیم /etc/mohsen"
   echo "  لاگ /var/log/mohsen و پشتیبان /var/backups/mohsen"
   echo "  فایل رمز /root/mohsen-credentials.txt"
@@ -40,9 +41,14 @@ if [[ "$YES" -ne 1 ]]; then
   fi
 fi
 
-systemctl disable --now mohsen >/dev/null 2>&1 || true
-rm -f /etc/systemd/system/mohsen.service
+systemctl disable --now mohsen-tls.timer mohsen-tlsd mohsen >/dev/null 2>&1 || true
+rm -f /etc/systemd/system/mohsen.service \
+  /etc/systemd/system/mohsen-tlsd.service \
+  /etc/systemd/system/mohsen-tls.service \
+  /etc/systemd/system/mohsen-tls.timer
 systemctl daemon-reload || true
+rm -rf /root/.acme.sh /var/lib/mohsen-acme
+rm -f /run/mohsen/tls.sock
 
 rm -f /etc/nginx/sites-enabled/mohsen.conf /etc/nginx/sites-available/mohsen.conf
 if command -v nginx >/dev/null 2>&1; then
