@@ -190,7 +190,7 @@ def _names_for(domain: str, addresses: set[str]) -> tuple[list[str], str]:
     taken = Website.objects.filter(domain=other).exists() or AdminDomain.objects.filter(domain=other).exists()
     if taken:
         return names, ""
-    ok, resolved = points_here(other, addresses)
+    ok, resolved, _confirmed = points_here(other, addresses)
     if ok:
         names.append(other)
         return names, ""
@@ -258,14 +258,23 @@ def _issue_unlocked(domain: str, *, force: bool) -> str:
         why = "آی‌پی این سرور تشخیص داده نشد. شبکه را بررسی کنید و دوباره تلاش کنید."
         _mark(cert, status=Certificate.Status.FAILED, last_error=why, last_attempt_at=now)
         return why
-    dns_ok, resolved = points_here(domain, addresses)
+    dns_ok, resolved, confirmed = points_here(domain, addresses)
     if not dns_ok:
         if resolved:
             why = f"DNS دامنه {domain} به این سرور اشاره نمی‌کند. رکورد A را به آی‌پی سرور بدهید و چند دقیقه بعد دوباره تلاش کنید."
-        else:
+            _mark(cert, status=Certificate.Status.FAILED, last_error=why, last_attempt_at=now)
+            return why
+        if confirmed:
+            # چند resolver مستقل (سیستم + fallbackها) همگی قطعاً گفته‌اند
+            # رکوردی نیست؛ همین‌جا متوقف می‌شویم.
             why = f"هنوز رکورد DNS برای {domain} پیدا نشد. بعد از اشاره دادن دامنه، صدور خودکار دوباره تلاش می‌کند."
-        _mark(cert, status=Certificate.Status.FAILED, last_error=why, last_attempt_at=now)
-        return why
+            _mark(cert, status=Certificate.Status.FAILED, last_error=why, last_attempt_at=now)
+            return why
+        # هیچ resolverای (نه سیستم، نه fallbackهای عمومی) جواب نداد؛ این یعنی
+        # شبکه/resolver محلی نامعلوم است، نه این‌که رکورد واقعاً نیست. به‌جای
+        # متوقف‌کردن کاذب، صدور واقعی را هم امتحان می‌کنیم -- داور نهایی
+        # سرورهای اعتبارسنجیِ خودِ Let's Encrypt‌اند، نه resolver محلی ما.
+        _log(f"dns precheck inconclusive for {domain}; attempting acme anyway")
 
     names, note = _names_for(domain, addresses)
     reachable, reach_error = _challenge_reachable(domain)
