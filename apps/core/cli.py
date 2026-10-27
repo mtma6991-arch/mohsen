@@ -80,6 +80,7 @@ def _menu():
     print("  8) حذف دامنه پنل")
     print("  9) به‌روزرسانی از گیت‌هاب   sudo mohsen update")
     print(" 10) حذف کامل پروژه         sudo mohsen uninstall --yes")
+    print(" 11) صدور و تمدید TLS       sudo mohsen tls")
     print("  0) خروج")
     _hr()
 
@@ -116,6 +117,13 @@ def status():
     print(f"  قالب‌ها:       {__import__('apps.templates_engine.models', fromlist=['TemplatePackage']).TemplatePackage.objects.count()}")
     print(f"  افزونه‌ها:     {PluginPackage.objects.count()}")
     print(f"  وب‌سایت‌ها:    {Website.objects.count()}")
+    try:
+        from apps.tls.models import Certificate
+
+        print(f"  گواهی فعال:    {Certificate.objects.filter(status=Certificate.Status.ACTIVE).count()}")
+        print(f"  گواهی ناموفق:  {Certificate.objects.filter(status=Certificate.Status.FAILED).count()}")
+    except Exception:
+        print("  گواهی TLS:     هنوز آماده نیست")
     _print_login(snap)
 
 
@@ -148,26 +156,16 @@ def add_domain():
         registry.write_text(names + "\n", encoding="utf-8")
     except OSError as exc:
         print(f"هشدار: فهرست دامنه نوشته نشد: {exc}")
-    https = False
-    answer = input("گواهی SSL با certbot گرفته شود؟ [y/N]: ").strip().lower()
-    if answer in {"y", "yes", "بله"}:
-        if shutil.which("certbot"):
-            proc = subprocess.run(["certbot", "--nginx", "-d", domain, "--non-interactive", "--agree-tos", "-m", f"admin@{domain}", "--redirect"])
-            https = proc.returncode == 0
-            if https:
-                AdminDomain.objects.filter(domain=domain).update(https=True)
-            else:
-                print("certbot ناموفق بود. دامنه ثبت شد ولی HTTPS فعال نشد.")
-        else:
-            print("certbot نصب نیست. بعداً: apt install certbot python3-certbot-nginx")
-    scheme = "https" if https else "http"
+    from apps.tls.names import is_public_dns_name
+    from apps.tls.service import enqueue
+
     print()
     print("دامنه ثبت شد. رکورد DNS از نوع A را به آی‌پی همین سرور اشاره دهید.")
-    if https:
-        print(f"  دامنه: {scheme}://{domain}/{settings.WEB_PASS}/")
+    if is_public_dns_name(domain):
+        print(enqueue(domain, "panel", force=False))
     else:
-        print(f"  دامنه: {scheme}://{domain}/{settings.WEB_PASS}/")
-        print(f"  دامنه با پورت پنل: {scheme}://{domain}:{settings.PANEL_PORT}/{settings.WEB_PASS}/")
+        print("برای آی‌پی یا نام محلی گواهی عمومی صادر نمی‌شود.")
+        print(f"  ورود با پورت پنل: http://{domain}:{settings.PANEL_PORT}/{settings.WEB_PASS}/")
     _print_login()
     sync_credentials()
     _hr()
@@ -189,6 +187,9 @@ def remove_domain():
         print("شماره نامعتبر است.")
         return
     row = rows[int(raw) - 1]
+    from apps.tls.service import enqueue_remove
+
+    print(enqueue_remove(row.domain))
     row.delete()
     print(f"{row.domain} حذف شد.")
     _print_login()
@@ -284,6 +285,9 @@ def backup():
     env = Path("/etc/mohsen/mohsen.env")
     if env.is_file():
         shutil.copy2(env, dest / "mohsen.env")
+    ssl = Path("/etc/mohsen/ssl")
+    if ssl.is_dir():
+        shutil.copytree(ssl, dest / "ssl", dirs_exist_ok=True)
     os.chmod(dest, 0o700)
     print(f"پشتیبان ساخته شد: {dest}")
 
@@ -310,6 +314,15 @@ def uninstall_project():
         return
     script = _project_root() / "uninstall.sh"
     os.execv("/bin/bash", ["bash", str(script), "--yes"])
+
+
+def tls_maintain_cli():
+    if not _require_root():
+        return
+    from apps.tls.service import perform_maintain
+
+    print("صدور گواهی‌های جاافتاده و تمدید نزدیک به انقضا. ممکن است چند دقیقه طول بکشد.")
+    print(perform_maintain())
 
 
 def main(argv=None):
@@ -345,6 +358,8 @@ def main(argv=None):
         "update": update_project,
         "10": uninstall_project,
         "uninstall": uninstall_project,
+        "11": tls_maintain_cli,
+        "tls": tls_maintain_cli,
         "status": status,
     }
     if argv:
@@ -352,6 +367,7 @@ def main(argv=None):
         if action is None:
             print("فرمان ناشناخته.")
             print("  sudo mohsen")
+            print("  sudo mohsen tls")
             print("  sudo mohsen update")
             print("  sudo mohsen uninstall --yes")
             return 2

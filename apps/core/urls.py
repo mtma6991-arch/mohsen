@@ -6,12 +6,14 @@ from apps.core import views as core_views
 from apps.plugins import views as plugin_views
 from apps.sites import views as site_views
 from apps.templates_engine import views as template_views
+from apps.tls import views as tls_views
 
 urlpatterns = [
     path("", core_views.dashboard, name="dashboard"),
     path("login/", core_views.login_view, name="login"),
     path("logout/", core_views.logout_view, name="logout"),
     path("settings/", core_views.settings_view, name="settings"),
+    path("tls/", tls_views.tls_home, name="tls-home"),
     path("activity/", core_views.activity_view, name="activity"),
     path("password/", core_views.password_view, name="password"),
     path("guide/template/", core_views.guide_template, name="guide-template"),
@@ -36,6 +38,7 @@ urlpatterns = [
     path("sites/", site_views.site_list, name="site-list"),
     path("sites/new/", site_views.site_create, name="site-create"),
     path("sites/<int:pk>/", site_views.site_edit, name="site-edit"),
+    path("sites/<int:pk>/tls/", site_views.site_tls, name="site-tls"),
     path("sites/<int:pk>/memar/", architect_views.site_memar, name="site-memar"),
     path("sites/<int:pk>/delete/", site_views.site_delete, name="site-delete"),
     path("messages/<int:pk>/delete/", site_views.message_delete, name="message-delete"),
