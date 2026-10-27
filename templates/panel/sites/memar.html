@@ -1,0 +1,53 @@
+{% extends "panel/base.html" %}
+{% block title %}معمار · {{ obj.domain }}{% endblock %}
+{% block heading %}معمار · {{ obj.title }}{% endblock %}
+{% block content %}
+<div class="toolbar">
+  <a class="ghost" href="{% url 'site-edit' obj.pk %}">بازگشت به سایت</a>
+  <a class="btn" target="_blank" href="/_preview/{{ obj.domain }}/">پیش‌نمایش</a>
+  <span class="muted">{{ node_count }} المان از قالب «{{ obj.template.name }}». شناسه‌ها همان شناسه کاتالوگ معمار هستند.</span>
+</div>
+{% if not ready %}
+  <section class="card" style="margin-top:1rem">
+    <h2>این قالب سند معمار ندارد</h2>
+    <p>قالب باید <code>architect.json</code> و نشان <code dir="ltr">data-memar-id</code> داشته باشد. راهنمای زیپ قالب را ببینید و قالب را دوباره بارگذاری کنید.</p>
+  </section>
+{% else %}
+  <form method="post" style="margin-top:1rem">
+    {% csrf_token %}
+    {% for page in pages %}
+      <section class="card" style="margin-bottom:1rem">
+        <h2>{{ page.title }} <small dir="ltr">{{ page.slug }}</small></h2>
+        {% for node in page.nodes %}
+          <article class="pb-block">
+            <header>
+              <strong>{{ node.name }}</strong>
+              <span dir="ltr">{{ node.id }} · {{ node.uid }}</span>
+            </header>
+            {% if node.parent %}<p class="hint">داخل <span dir="ltr">{{ node.parent }}</span></p>{% endif %}
+            {% for field in node.fields %}
+              <label>{{ field.label }}
+                {% if field.type == "textarea" %}
+                  <textarea name="{{ node.uid }}__{{ field.key }}" rows="3">{{ field.value }}</textarea>
+                {% elif field.type == "select" %}
+                  <select name="{{ node.uid }}__{{ field.key }}">
+                    <option value="">—</option>
+                    {% for opt in field.options %}
+                      <option value="{{ opt }}" {% if opt == field.value %}selected{% endif %}>{{ opt }}</option>
+                    {% endfor %}
+                  </select>
+                {% else %}
+                  <input name="{{ node.uid }}__{{ field.key }}" value="{{ field.value }}">
+                {% endif %}
+              </label>
+            {% empty %}
+              <p class="hint">این المان تنظیم متنی ندارد و فقط جایگاه سازه است.</p>
+            {% endfor %}
+          </article>
+        {% endfor %}
+      </section>
+    {% endfor %}
+    <button class="btn" type="submit">ذخیره ویرایش معمار</button>
+  </form>
+{% endif %}
+{% endblock %}

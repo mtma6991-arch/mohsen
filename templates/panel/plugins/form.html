@@ -1,0 +1,20 @@
+{% extends "panel/base.html" %}
+{% block title %}بارگذاری افزونه{% endblock %}
+{% block heading %}افزودن افزونه به مرکز{% endblock %}
+{% block content %}
+<div class="layout">
+  <form method="post" enctype="multipart/form-data" class="card form-card">
+    {% csrf_token %}
+    {% if error %}<p class="errorlist">{{ error }}</p>{% endif %}
+    <label>زیپ افزونه<input type="file" name="archive" accept=".zip,application/zip" required></label>
+    <p class="hint">زیپ باید plugin.json و فایل پایتون ورود داشته باشد. کلاس Plugin از BasePlugin ارث می‌برد. کد افزونه با دسترسی سرور اجرا می‌شود؛ فقط بسته مورد اعتماد را نصب کنید.</p>
+    <button class="btn" type="submit">نصب در مرکز</button>
+  </form>
+  <div class="card">
+    <h2>نمونه‌ها</h2>
+    <p><a href="{% url 'plugin-example' 'sms' %}">دانلود افزونه پیامک</a></p>
+    <p><a href="{% url 'plugin-example' 'page-builder' %}">دانلود صفحه‌ساز</a></p>
+    <p class="hint">بعد از نصب، از صفحه افزونه آن را به دسته اضافه کنید. مثال نصب: پیامک برای طلایی، صفحه‌ساز برای نقره‌ای.</p>
+  </div>
+</div>
+{% endblock %}

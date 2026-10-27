@@ -1,0 +1,17 @@
+{% extends "panel/base.html" %}
+{% block title %}حذف{% endblock %}
+{% block heading %}تأیید حذف{% endblock %}
+{% block content %}
+<form method="post" class="card">
+  {% csrf_token %}
+  <p>حذف «{{ object_name }}» قطعی است.</p>
+  <button class="danger" type="submit">حذف شود</button>
+  {% if cancel_pk %}
+    <a class="ghost" href="{% url cancel_url_name cancel_pk %}">انصراف</a>
+  {% elif cancel %}
+    <a class="ghost" href="{% url cancel %}">انصراف</a>
+  {% else %}
+    <a class="ghost" href="{% url 'dashboard' %}">انصراف</a>
+  {% endif %}
+</form>
+{% endblock %}

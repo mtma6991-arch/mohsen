@@ -1,0 +1,12 @@
+{% extends "layout/base.html" %}
+{% block content %}
+<section class="wrap head narrow" data-memar-id="section" data-memar-uid="about-section">
+  <h1 data-memar-id="heading" data-memar-uid="about-title">{{ memar('about-title', 'text', 'فروشگاه، نه ویترین اینستاگرام') }}</h1>
+  <p data-memar-id="text" data-memar-uid="about-body">{{ memar('about-body', 'text', site.description or 'کالای ثبت‌شده در این سایت از همین شعبه خارج می‌شود. متن‌های همین صفحه را مشتری از معمار، داخل پنل سایت، عوض می‌کند.') }}</p>
+  <ul data-memar-id="icon-list" data-memar-uid="about-facts">
+    <li>گارانتی فروشگاه روی فاکتور نوشته می‌شود</li>
+    <li>رجیستری قبل از تحویل چک می‌شود</li>
+    <li>نشانی: {{ site.address }}</li>
+  </ul>
+</section>
+{% endblock %}

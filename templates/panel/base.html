@@ -1,0 +1,52 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>{% block title %}پنل محسن{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'panel/css/panel.css' %}">
+  <link rel="icon" href="{% static 'panel/favicon.svg' %}">
+</head>
+<body>
+  <div class="shell">
+    <aside class="side">
+      <div class="brand">
+        <b>محسن</b>
+        <span>سایت‌ساز چندمستأجری</span>
+      </div>
+      <nav>
+        <a href="{% url 'dashboard' %}" {% if request.resolver_match.url_name == 'dashboard' %}class="active"{% endif %}>پیشخوان</a>
+        <a href="{% url 'category-list' %}" {% if 'category' in request.resolver_match.url_name %}class="active"{% endif %}>دسته‌ها</a>
+        <a href="{% url 'template-list' %}" {% if 'template' in request.resolver_match.url_name %}class="active"{% endif %}>قالب‌ها</a>
+        <a href="{% url 'plugin-list' %}" {% if 'plugin' in request.resolver_match.url_name %}class="active"{% endif %}>مرکز افزونه</a>
+        <a href="{% url 'site-list' %}" {% if 'site-' in request.resolver_match.url_name %}class="active"{% endif %}>وب‌سایت‌ها</a>
+        <a href="{% url 'tls-home' %}" {% if 'tls' in request.resolver_match.url_name %}class="active"{% endif %}>گواهی TLS</a>
+        <a href="{% url 'guide-template' %}" {% if request.resolver_match.url_name == 'guide-template' %}class="active"{% endif %}>راهنمای زیپ قالب</a>
+        <a href="{% url 'guide-plugin' %}" {% if request.resolver_match.url_name == 'guide-plugin' %}class="active"{% endif %}>راهنمای زیپ افزونه</a>
+        <a href="{% url 'settings' %}">تنظیمات</a>
+        <a href="{% url 'activity' %}">گزارش</a>
+      </nav>
+      <div class="ver">نسخه {{ MOHSEN_VERSION }}</div>
+    </aside>
+    <section class="main">
+      <header class="topbar">
+        <h1>{% block heading %}{% endblock %}</h1>
+        <div class="who">
+          <span>{{ request.user.username }}</span>
+          <a href="{% url 'password' %}">رمز</a>
+          <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="ghost" type="submit">خروج</button></form>
+        </div>
+      </header>
+      {% if messages %}
+        <ul class="messages">
+          {% for message in messages %}<li class="{{ message.tags }}">{{ message }}</li>{% endfor %}
+        </ul>
+      {% endif %}
+      {% block content %}{% endblock %}
+    </section>
+  </div>
+  <script src="{% static 'panel/js/panel.js' %}"></script>
+</body>
+</html>

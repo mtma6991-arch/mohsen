@@ -1,0 +1,27 @@
+{% extends "layout/base.html" %}
+{% block content %}
+{% if plugins.page_builder and plugins.page_builder.active %}
+  <div class="wrap">{{ plugins.page_builder.html }}</div>
+{% else %}
+<section class="hero" data-memar-id="hero" data-memar-uid="home-hero">
+  <div>
+    <p class="eyebrow" data-memar-id="heading" data-memar-uid="home-kicker">{{ memar('home-kicker', 'text', 'فروشگاه ' ~ site.category) }}</p>
+    <h1 data-memar-id="heading" data-memar-uid="home-title">{{ memar('home-title', 'text', site.title) }}</h1>
+    <p data-memar-id="text" data-memar-uid="home-tagline">{{ memar('home-tagline', 'text', site.tagline) }}</p>
+    <p class="muted" data-memar-id="text" data-memar-uid="home-promise">{{ memar('home-promise', 'text', data.promise) }}</p>
+    <a class="btn" href="{{ page_url('phones') }}" data-memar-id="button" data-memar-uid="home-cta">{{ memar('home-cta', 'text', 'لیست گوشی‌ها') }}</a>
+  </div>
+  <div class="device" aria-hidden="true"><span></span><b>۱۲۸</b><small>گیگ نمونه</small></div>
+</section>
+{% endif %}
+<section class="wrap cards" data-memar-id="product-grid" data-memar-uid="home-phones">
+  {% for phone in data.phones[:3] %}
+    <article>
+      <p class="sku">{{ phone.chip }}</p>
+      <h2>{{ phone.name }}</h2>
+      <p>{{ phone.ram }} رم · {{ phone.store }}</p>
+      <strong>{{ phone.price }} تومان</strong>
+    </article>
+  {% endfor %}
+</section>
+{% endblock %}

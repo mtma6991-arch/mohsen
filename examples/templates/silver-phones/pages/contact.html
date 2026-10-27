@@ -1,0 +1,19 @@
+{% extends "layout/base.html" %}
+{% block content %}
+<section class="wrap head" data-memar-id="section" data-memar-uid="contact-head">
+  <h1 data-memar-id="heading" data-memar-uid="contact-title">{{ memar('contact-title', 'text', 'پیام به فروشگاه') }}</h1>
+  <p data-memar-id="text" data-memar-uid="contact-meta">{{ memar('contact-meta', 'text', site.phone ~ ' · ' ~ site.email) }}</p>
+</section>
+<section class="wrap">
+  <form method="post" action="{{ form_action('contact') }}" class="form" data-memar-id="contact-form" data-memar-uid="contact-form-main">
+    {% if sent %}<p class="ok">پیام ثبت شد.</p>{% endif %}
+    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+    <input class="hp" name="company_website" tabindex="-1" autocomplete="off">
+    <label>نام<input name="name" required></label>
+    <label>موبایل<input name="phone" required></label>
+    <label>ایمیل<input type="email" name="email"></label>
+    <label>موضوع<textarea name="message" rows="5" required></textarea></label>
+    <button type="submit" data-memar-id="button" data-memar-uid="contact-submit">{{ memar('contact-submit', 'text', 'ارسال') }}</button>
+  </form>
+</section>
+{% endblock %}

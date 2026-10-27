@@ -1,0 +1,26 @@
+{% extends "panel/base.html" %}
+{% block title %}بارگذاری قالب{% endblock %}
+{% block heading %}بارگذاری زیپ قالب{% endblock %}
+{% block content %}
+<div class="layout">
+  <form method="post" enctype="multipart/form-data" class="card form-card">
+    {% csrf_token %}
+    {% if error %}<p class="errorlist">{{ error }}</p>{% endif %}
+    <label>دسته مقصد
+      <select name="category" required>
+        <option value="">انتخاب کنید</option>
+        {% for cat in categories %}<option value="{{ cat.id }}">{{ cat.name }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>فایل زیپ<input type="file" name="archive" accept=".zip,application/zip" required></label>
+    <p class="hint">نام، نسخه و صفحات از template.json داخل زیپ خوانده می‌شود. اگر slug تکراری باشد، همان قالب به‌روزرسانی می‌شود.</p>
+    <button class="btn" type="submit">بررسی و نصب</button>
+  </form>
+  <div class="card">
+    <h2>نمونه‌های آماده</h2>
+    <p><a href="{% url 'template-example' 'jewelry' %}">دانلود قالب جواهر (دسته طلایی)</a></p>
+    <p><a href="{% url 'template-example' 'phones' %}">دانلود قالب گوشی (دسته نقره‌ای)</a></p>
+    <p><a href="{% url 'guide-template' %}">راهنمای کامل ساختار زیپ</a></p>
+  </div>
+</div>
+{% endblock %}

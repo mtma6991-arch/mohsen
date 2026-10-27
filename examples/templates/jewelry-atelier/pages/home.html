@@ -1,0 +1,32 @@
+{% extends "layout/base.html" %}
+{% block content %}
+<section class="hero" data-memar-id="hero" data-memar-uid="home-hero">
+  <p class="kicker" data-memar-id="heading" data-memar-uid="home-kicker">{{ memar('home-kicker', 'text', site.category ~ ' · آتلیه') }}</p>
+  <h1 data-memar-id="heading" data-memar-uid="home-title">{{ memar('home-title', 'text', site.title) }}</h1>
+  <p class="lead" data-memar-id="text" data-memar-uid="home-tagline">{{ memar('home-tagline', 'text', site.tagline) }}</p>
+  <p class="intro" data-memar-id="text" data-memar-uid="home-intro">{{ memar('home-intro', 'text', data.intro) }}</p>
+  <div class="hero-actions" data-memar-id="container" data-memar-uid="home-actions">
+    <a class="btn" href="{{ page_url('collection') }}" data-memar-id="button" data-memar-uid="home-cta-collection">{{ memar('home-cta-collection', 'text', 'دیدن مجموعه') }}</a>
+    <a class="btn ghost" href="{{ page_url('contact') }}" data-memar-id="button" data-memar-uid="home-cta-order">{{ memar('home-cta-order', 'text', 'سفارش خصوصی') }}</a>
+  </div>
+  <div class="ornament" aria-hidden="true"><i></i><i></i><i></i></div>
+</section>
+<section class="strip" data-memar-id="counter" data-memar-uid="home-counters">
+  <article><b>۰۳</b><span>کارگاه در تهران</span></article>
+  <article><b>۱۸</b><span>عیار استاندارد کار</span></article>
+  <article><b>۱۲</b><span>روز زمان ساخت سفارشی</span></article>
+</section>
+<section class="grid" data-memar-id="product-grid" data-memar-uid="home-products">
+  <header><h2 data-memar-id="heading" data-memar-uid="home-products-title">{{ memar('home-products-title', 'text', 'قطعه‌های حاضر') }}</h2><a href="{{ page_url('collection') }}">همه</a></header>
+  <div>
+    {% for product in data.products[:3] %}
+      <article class="card">
+        <div class="stone"></div>
+        <h3>{{ product.name }}</h3>
+        <p>{{ product.note }}</p>
+        <footer><span>{{ product.metal }}</span><strong>{{ product.price }} تومان</strong></footer>
+      </article>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

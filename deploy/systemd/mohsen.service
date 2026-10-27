@@ -1,0 +1,17 @@
+[Unit]
+Description=Mohsen site builder
+After=network.target
+
+[Service]
+Type=simple
+User=mohsen
+Group=mohsen
+WorkingDirectory=/opt/mohsen
+EnvironmentFile=/etc/mohsen/mohsen.env
+ExecStart=/opt/mohsen/.venv/bin/gunicorn config.wsgi:application --bind 127.0.0.1:8790 --workers 3 --timeout 60 --access-logfile - --error-logfile -
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

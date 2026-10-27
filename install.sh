@@ -1,0 +1,293 @@
+#!/usr/bin/env bash
+# نصب کامل سایت‌ساز محسن روی اوبونتو/دبیان.
+#   sudo bash install.sh
+#   sudo bash install.sh --postgres
+set -euo pipefail
+
+if [[ "${EUID}" -ne 0 ]]; then
+  echo "نصب را با root اجرا کنید: sudo bash install.sh"
+  exit 1
+fi
+
+USE_POSTGRES=0
+if [[ "${1:-}" == "--postgres" ]]; then
+  USE_POSTGRES=1
+fi
+
+if [[ -f /etc/os-release ]]; then
+  # shellcheck disable=SC1091
+  . /etc/os-release
+else
+  ID=""
+fi
+case "${ID:-}" in
+  ubuntu|debian) ;;
+  *)
+    echo "این اسکریپت برای اوبونتو و دبیان نوشته شده است. شناسه سیستم: ${ID:-unknown}"
+    exit 1
+    ;;
+esac
+
+SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+APP=/opt/mohsen
+ENV_DIR=/etc/mohsen
+ENV_FILE="${ENV_DIR}/mohsen.env"
+DATA_DIR=/var/lib/mohsen
+CRED=/root/mohsen-credentials.txt
+
+export DEBIAN_FRONTEND=noninteractive
+apt-get update
+apt-get install -y python3 python3-venv python3-pip python3-dev build-essential nginx curl ca-certificates rsync openssl socat
+
+PY=python3
+if ! "$PY" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 10) else 1)'; then
+  echo "پایتون ۳.۱۰ یا جدیدتر لازم است."
+  exit 1
+fi
+
+if ! id mohsen >/dev/null 2>&1; then
+  useradd --system --home "$APP" --shell /usr/sbin/nologin mohsen
+fi
+
+mkdir -p "$APP" "$ENV_DIR" "$DATA_DIR/media" /var/log/mohsen /var/backups/mohsen /var/lib/mohsen-acme /etc/mohsen/ssl/_default
+chmod 755 /var/lib/mohsen-acme /etc/mohsen /etc/mohsen/ssl /etc/mohsen/ssl/_default
+rsync -a --delete \
+  --exclude '.git' \
+  --exclude '.venv' \
+  --exclude 'media' \
+  --exclude 'data' \
+  --exclude 'staticfiles' \
+  --exclude 'mohsen.env' \
+  --exclude '__pycache__' \
+  "$SRC"/ "$APP"/
+
+if [[ ! -f "$ENV_FILE" ]]; then
+  SECRET="$("$PY" -c 'import secrets; print(secrets.token_urlsafe(48))')"
+  WEB_PASS="$("$PY" -c 'import secrets; print(secrets.token_urlsafe(9))')"
+  ADMIN_PASS="$("$PY" -c 'import secrets; print(secrets.token_urlsafe(12))')"
+  FIRST_INSTALL=1
+else
+  # shellcheck disable=SC1090
+  source "$ENV_FILE"
+  SECRET="${MOHSEN_SECRET_KEY}"
+  WEB_PASS="${MOHSEN_WEB_PASS}"
+  ADMIN_PASS=""
+  FIRST_INSTALL=0
+fi
+
+OLD_ENV_BACKUP=""
+if [[ -f "$ENV_FILE" ]]; then
+  OLD_ENV_BACKUP="$(cat "$ENV_FILE")"
+fi
+
+DB_URL_LINE=""
+if [[ "$USE_POSTGRES" -eq 1 ]]; then
+  apt-get install -y postgresql postgresql-contrib libpq-dev
+  PG_PASS="${MOHSEN_PG_PASS:-$("$PY" -c 'import secrets; print(secrets.token_urlsafe(18))')}"
+  sudo -u postgres psql -tc "SELECT 1 FROM pg_roles WHERE rolname='mohsen'" | grep -q 1 || \
+    sudo -u postgres psql -c "CREATE USER mohsen WITH PASSWORD '${PG_PASS}'"
+  sudo -u postgres psql -tc "SELECT 1 FROM pg_database WHERE datname='mohsen'" | grep -q 1 || \
+    sudo -u postgres psql -c "CREATE DATABASE mohsen OWNER mohsen"
+  DB_URL_LINE="DATABASE_URL=postgresql://mohsen:${PG_PASS}@127.0.0.1:5432/mohsen"
+elif [[ -n "$OLD_ENV_BACKUP" ]]; then
+  EXISTING_DB="$(printf '%s\n' "$OLD_ENV_BACKUP" | grep -E '^DATABASE_URL=' | head -n 1 || true)"
+  if [[ -n "$EXISTING_DB" ]]; then
+    DB_URL_LINE="$EXISTING_DB"
+  fi
+fi
+
+cat > "$ENV_FILE" <<EOF
+MOHSEN_SECRET_KEY=${SECRET}
+MOHSEN_WEB_PASS=${WEB_PASS}
+MOHSEN_PORT=8787
+MOHSEN_ADMIN_USER=${MOHSEN_ADMIN_USER:-admin}
+MOHSEN_DEBUG=0
+MOHSEN_HTTPS=0
+MOHSEN_DATA_DIR=${DATA_DIR}
+MOHSEN_MEDIA_ROOT=${DATA_DIR}/media
+MOHSEN_STATIC_ROOT=${APP}/staticfiles
+DJANGO_SETTINGS_MODULE=config.settings.prod
+${DB_URL_LINE}
+EOF
+if [[ -n "$OLD_ENV_BACKUP" ]]; then
+  while IFS= read -r line; do
+    [[ "$line" == *=* ]] || continue
+    key="${line%%=*}"
+    case "$key" in
+      ""|\#*) continue ;;
+      MOHSEN_SECRET_KEY|MOHSEN_WEB_PASS|MOHSEN_PORT|MOHSEN_ADMIN_USER|MOHSEN_DEBUG|MOHSEN_HTTPS|MOHSEN_DATA_DIR|MOHSEN_MEDIA_ROOT|MOHSEN_STATIC_ROOT|DJANGO_SETTINGS_MODULE|DATABASE_URL|MOHSEN_ADMIN_PASSWORD|MOHSEN_ADMIN_RESET)
+        ;;
+      *)
+        grep -qF "${key}=" "$ENV_FILE" || printf '%s\n' "$line" >> "$ENV_FILE"
+        ;;
+    esac
+  done <<<"$OLD_ENV_BACKUP"
+fi
+chown root:mohsen "$ENV_FILE"
+chmod 640 "$ENV_FILE"
+cp "$ENV_FILE" "$APP/mohsen.env"
+chown root:mohsen "$APP/mohsen.env"
+chmod 640 "$APP/mohsen.env"
+
+if [[ ! -d "$APP/.venv" ]]; then
+  "$PY" -m venv "$APP/.venv"
+fi
+if compgen -G "$APP/vendor/wheels/*.whl" > /dev/null; then
+  "$APP/.venv/bin/pip" install --no-index --find-links="$APP/vendor/wheels" -r "$APP/requirements.txt"
+else
+  "$APP/.venv/bin/pip" install --upgrade pip
+  "$APP/.venv/bin/pip" install -r "$APP/requirements.txt"
+fi
+if [[ "$USE_POSTGRES" -eq 1 ]]; then
+  "$APP/.venv/bin/pip" install -r "$APP/requirements-postgres.txt" || true
+fi
+
+chown -R mohsen:mohsen "$APP" "$DATA_DIR" /var/log/mohsen
+chmod 750 "$DATA_DIR"
+
+run_manage() {
+  sudo -u mohsen bash -lc "set -a; source '$ENV_FILE'; set +a; cd '$APP'; exec .venv/bin/python manage.py $*"
+}
+
+if [[ "$FIRST_INSTALL" -eq 1 ]]; then
+  grep -q '^MOHSEN_ADMIN_PASSWORD=' "$ENV_FILE" || echo "MOHSEN_ADMIN_PASSWORD=${ADMIN_PASS}" >> "$ENV_FILE"
+  echo "MOHSEN_ADMIN_RESET=1" >> "$ENV_FILE"
+fi
+
+run_manage migrate --noinput
+run_manage bootstrap
+if [[ "$FIRST_INSTALL" -eq 1 ]]; then
+  run_manage ensure_admin
+  # رمز را بعد از ساخت کاربر از فایل محیط برمی‌داریم تا در سرویس روزمره نماند.
+  sed -i '/^MOHSEN_ADMIN_PASSWORD=/d;/^MOHSEN_ADMIN_RESET=/d' "$ENV_FILE"
+  cp "$ENV_FILE" "$APP/mohsen.env"
+  chown root:mohsen "$ENV_FILE" "$APP/mohsen.env"
+  chmod 640 "$ENV_FILE" "$APP/mohsen.env"
+fi
+run_manage collectstatic --noinput
+
+install -m 0755 "$APP/bin/mohsen" /usr/local/bin/mohsen
+ln -sfn /usr/local/bin/mohsen /usr/local/bin/Mohsen
+
+install -m 0644 "$APP/deploy/systemd/mohsen.service" /etc/systemd/system/mohsen.service
+install -m 0644 "$APP/deploy/systemd/mohsen-tlsd.service" /etc/systemd/system/mohsen-tlsd.service
+install -m 0644 "$APP/deploy/systemd/mohsen-tls.service" /etc/systemd/system/mohsen-tls.service
+install -m 0644 "$APP/deploy/systemd/mohsen-tls.timer" /etc/systemd/system/mohsen-tls.timer
+systemctl daemon-reload
+systemctl enable mohsen
+systemctl restart mohsen
+systemctl enable mohsen-tlsd
+systemctl restart mohsen-tlsd || echo "هشدار: سرویس صدور TLS بالا نیامد. journalctl -u mohsen-tlsd"
+systemctl enable --now mohsen-tls.timer || echo "هشدار: تایمر TLS فعال نشد."
+
+NGINX_GROUP="www-data"
+if ! getent group www-data >/dev/null 2>&1 && getent group nginx >/dev/null 2>&1; then
+  NGINX_GROUP="nginx"
+fi
+if [[ ! -f /etc/mohsen/ssl/_default/fullchain.pem || ! -f /etc/mohsen/ssl/_default/privkey.pem ]]; then
+  openssl req -x509 -nodes -newkey rsa:2048 -days 825 \
+    -keyout /etc/mohsen/ssl/_default/privkey.pem \
+    -out /etc/mohsen/ssl/_default/fullchain.pem \
+    -subj "/CN=mohsen-default" >/dev/null 2>&1
+fi
+touch /etc/mohsen/ssl/cert.map /etc/mohsen/ssl/key.map /etc/mohsen/ssl/redirect.map
+chgrp -R "$NGINX_GROUP" /etc/mohsen/ssl || true
+chmod 750 /etc/mohsen/ssl /etc/mohsen/ssl/_default
+chmod 640 /etc/mohsen/ssl/_default/fullchain.pem /etc/mohsen/ssl/_default/privkey.pem
+chmod 644 /etc/mohsen/ssl/cert.map /etc/mohsen/ssl/key.map /etc/mohsen/ssl/redirect.map
+
+if [[ ! -x /root/.acme.sh/acme.sh ]]; then
+  ACME_EMAIL="${MOHSEN_ACME_EMAIL:-}"
+  if [[ -z "$ACME_EMAIL" ]]; then
+    HN="$(hostname -f 2>/dev/null || hostname 2>/dev/null || true)"
+    if [[ "$HN" == *.* && "$HN" != "localhost" && "$HN" != *localhost* ]]; then
+      ACME_EMAIL="admin@${HN}"
+    else
+      ACME_EMAIL="admin@mohsen.invalid"
+    fi
+  fi
+  curl -fsSL https://get.acme.sh | sh -s -- --install-online -m "$ACME_EMAIL" --nocron --home /root/.acme.sh \
+    || echo "هشدار: acme.sh نصب نشد. بعد از وصل شدن اینترنت، sudo bash install.sh را تکرار کنید."
+fi
+
+install -m 0644 "$APP/deploy/nginx/mohsen.conf" /etc/nginx/sites-available/mohsen.conf
+ln -sfn /etc/nginx/sites-available/mohsen.conf /etc/nginx/sites-enabled/mohsen.conf
+rm -f /etc/nginx/sites-enabled/default
+nginx -t
+systemctl enable nginx
+systemctl reload nginx
+
+IP="$(hostname -I 2>/dev/null | awk '{print $1}')"
+if [[ -z "${IP}" || "${IP}" == 127.* ]]; then
+  IP="$(ip -4 route get 1.1.1.1 2>/dev/null | awk '{for (i=1; i<=NF; i++) if ($i=="src") {print $(i+1); exit}}')"
+fi
+if [[ -z "${IP}" || "${IP}" == 127.* ]]; then
+  echo "آی‌پی کارت شبکه پیدا نشد. آدرس ساختگی چاپ نمی‌شود."
+  echo "بعد از مشخص شدن آی‌پی: sudo mohsen"
+  IP=""
+fi
+ADMIN_USER="${MOHSEN_ADMIN_USER:-admin}"
+
+if [[ "$FIRST_INSTALL" -eq 1 ]]; then
+  if [[ -n "${IP}" ]]; then
+    cat > "$CRED" <<EOF
+محسن — مشخصات ورود
+این آدرس را عیناً در نوار مرورگر وارد کنید:
+LOGIN_URL_1=http://${IP}:8787/${WEB_PASS}/
+LOGIN_URL_2=http://${IP}/${WEB_PASS}/
+USERNAME=${ADMIN_USER}
+PASSWORD=${ADMIN_PASS}
+نام کاربری: ${ADMIN_USER}
+رمز عبور: ${ADMIN_PASS}
+دستور مدیریت: sudo mohsen
+به‌روزرسانی از گیت‌هاب: sudo mohsen update
+حذف کامل: sudo mohsen uninstall --yes
+EOF
+  else
+    cat > "$CRED" <<EOF
+محسن — مشخصات ورود
+آی‌پی سرور هنگام نصب خوانده نشد. بعداً sudo mohsen را بزنید.
+USERNAME=${ADMIN_USER}
+PASSWORD=${ADMIN_PASS}
+نام کاربری: ${ADMIN_USER}
+رمز عبور: ${ADMIN_PASS}
+دستور مدیریت: sudo mohsen
+به‌روزرسانی از گیت‌هاب: sudo mohsen update
+حذف کامل: sudo mohsen uninstall --yes
+EOF
+  fi
+  chmod 600 "$CRED"
+  echo
+  echo "============================================================"
+  echo "  محسن — سایت‌ساز نصب شد"
+  echo "  این آدرس را عیناً در نوار مرورگر وارد کنید"
+  echo "============================================================"
+  if [[ -n "${IP}" ]]; then
+    echo "  http://${IP}:8787/${WEB_PASS}/"
+    echo "  http://${IP}/${WEB_PASS}/"
+  else
+    echo "  آی‌پی پیدا نشد. بعد از بالا آمدن شبکه: sudo mohsen"
+  fi
+  echo "  نام کاربری: ${ADMIN_USER}"
+  echo "  رمز عبور:   ${ADMIN_PASS}"
+  echo
+  echo "  دستور مدیریت:"
+  echo "    sudo mohsen"
+  echo "  به‌روزرسانی از گیت‌هاب:"
+  echo "    sudo mohsen update"
+  echo "  حذف کامل پروژه:"
+  echo "    sudo mohsen uninstall --yes"
+  echo
+  echo "  رونوشت محرمانه:"
+  echo "    ${CRED}"
+  echo "============================================================"
+else
+  echo
+  echo "به‌روزرسانی انجام شد. رمز مدیر عوض نشده است."
+  if [[ -n "${IP}" ]]; then
+    echo "این آدرس را عیناً در نوار مرورگر وارد کنید:"
+    echo "  http://${IP}:8787/${WEB_PASS}/"
+    echo "  http://${IP}/${WEB_PASS}/"
+  fi
+  echo "اطلاعات ورود: sudo mohsen"
+fi

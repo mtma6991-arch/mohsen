@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# نقطه ورود دستور مدیریت. هم mohsen و هم Mohsen به این فایل وصل می‌شوند.
+set -euo pipefail
+
+ROOT=""
+if [[ -f /opt/mohsen/manage.py ]]; then
+  ROOT="/opt/mohsen"
+elif [[ -f "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/manage.py" ]]; then
+  ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+else
+  echo "پوشه نصب محسن پیدا نشد."
+  exit 1
+fi
+
+if [[ -f /etc/mohsen/mohsen.env ]]; then
+  set -a
+  # shellcheck disable=SC1091
+  source /etc/mohsen/mohsen.env
+  set +a
+elif [[ -f "$ROOT/mohsen.env" ]]; then
+  set -a
+  # shellcheck disable=SC1091
+  source "$ROOT/mohsen.env"
+  set +a
+fi
+
+if [[ -x "$ROOT/.venv/bin/python" ]]; then
+  PY="$ROOT/.venv/bin/python"
+else
+  PY="${PYTHON:-python3}"
+fi
+
+cd "$ROOT"
+export PYTHONPATH="$ROOT${PYTHONPATH:+:$PYTHONPATH}"
+
+if [[ "${1:-}" == "update" ]]; then
+  exec bash "$ROOT/deploy/update.sh"
+fi
+if [[ "${1:-}" == "uninstall" ]]; then
+  shift
+  exec bash "$ROOT/uninstall.sh" "$@"
+fi
+
+if [[ -f /etc/mohsen/mohsen.env || -n "${MOHSEN_SECRET_KEY:-}" ]]; then
+  export DJANGO_SETTINGS_MODULE="${DJANGO_SETTINGS_MODULE:-config.settings.prod}"
+else
+  export DJANGO_SETTINGS_MODULE="${DJANGO_SETTINGS_MODULE:-config.settings.dev}"
+fi
+exec "$PY" -m apps.core.cli "$@"

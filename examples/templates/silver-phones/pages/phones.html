@@ -1,0 +1,19 @@
+{% extends "layout/base.html" %}
+{% block content %}
+<section class="wrap head" data-memar-id="section" data-memar-uid="phones-head">
+  <h1 data-memar-id="heading" data-memar-uid="phones-title">{{ memar('phones-title', 'text', 'گوشی‌های قابل سفارش') }}</h1>
+  <p data-memar-id="text" data-memar-uid="phones-promise">{{ memar('phones-promise', 'text', data.promise) }}</p>
+</section>
+<section class="wrap table-like" data-memar-id="product-grid" data-memar-uid="phones-list">
+  {% for phone in data.phones %}
+    <article>
+      <div>
+        <h2>{{ phone.name }}</h2>
+        <p>{{ phone.chip }} · {{ phone.ram }}</p>
+      </div>
+      <span>{{ phone.store }}</span>
+      <strong>{{ phone.price }}</strong>
+    </article>
+  {% endfor %}
+</section>
+{% endblock %}

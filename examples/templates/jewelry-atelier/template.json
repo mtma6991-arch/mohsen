@@ -1,0 +1,25 @@
+{
+  "name": "آتلیه زرین",
+  "slug": "jewelry-atelier",
+  "version": "1.0.0",
+  "author": "Mohsen",
+  "description": "قالب فروشگاه جواهر برای دسته طلایی. صفحات خانه، مجموعه، داستان و تماس.",
+  "homepage": "home",
+  "pages": [
+    {"slug": "home", "title": "خانه", "file": "pages/home.html", "in_menu": true},
+    {"slug": "collection", "title": "مجموعه", "file": "pages/collection.html", "in_menu": true},
+    {"slug": "about", "title": "داستان", "file": "pages/about.html", "in_menu": true},
+    {"slug": "contact", "title": "تماس", "file": "pages/contact.html", "in_menu": true}
+  ],
+  "demo_data": {
+    "intro": "هر قطعه با دست و با طلای ۱۸ عیار ساخته می‌شود؛ برای کسانی که هدیه را با عجله انتخاب نمی‌کنند.",
+    "products": [
+      {"name": "گردنبند ماه‌گرفت", "price": "۱۸٬۴۰۰٬۰۰۰", "metal": "طلای ۱۸ عیار", "note": "آویز مینیاتوری با زنجیر قابل تنظیم"},
+      {"name": "انگشتر خط نور", "price": "۱۲٬۹۰۰٬۰۰۰", "metal": "طلا و مینا", "note": "ساخته‌شده به سفارش اندازه"},
+      {"name": "گوشواره قطره", "price": "۹٬۷۵۰٬۰۰۰", "metal": "طلای زرد", "note": "جفت سبک برای استفاده روزانه"},
+      {"name": "دستبند رج", "price": "۲۱٬۲۰۰٬۰۰۰", "metal": "طلای ۱۸ عیار", "note": "قفل جواهرنشان"},
+      {"name": "سنجاق یقه سروه", "price": "۷٬۴۰۰٬۰۰۰", "metal": "طلا و نقره", "note": "قطعه محدود پاییز"},
+      {"name": "النگو ساده پهن", "price": "۳۴٬۰۰۰٬۰۰۰", "metal": "طلای ۱۸ عیار", "note": "سطح مات، لبه براق"}
+    ]
+  }
+}

@@ -1,0 +1,46 @@
+{% extends "panel/base.html" %}
+{% block title %}دسته{% endblock %}
+{% block heading %}{% if mode == "create" %}دسته تازه{% else %}ویرایش {{ obj.name }}{% endif %}{% endblock %}
+{% block content %}
+<div class="layout">
+  <form method="post" class="card form-card">
+    {% csrf_token %}
+    <input type="hidden" name="form" value="meta">
+    {% for field in form %}
+      <label>{{ field.label }}{{ field }}{{ field.errors }}{% if field.help_text %}<small class="hint">{{ field.help_text }}</small>{% endif %}</label>
+    {% endfor %}
+    <div class="row-actions">
+      <button class="btn" type="submit">ذخیره دسته</button>
+      <a class="ghost" href="{% url 'category-list' %}">بازگشت</a>
+    </div>
+  </form>
+  <div>
+    {% if mode == "edit" %}
+      <form method="post" class="card">
+        {% csrf_token %}
+        <input type="hidden" name="form" value="plugins">
+        <h2>افزونه‌های این دسته</h2>
+        <p class="hint">هر افزونه‌ای که اینجا روشن شود، روی تمام وب‌سایت‌های دسته فعال است. همان کار را از مرکز افزونه هم می‌توان کرد.</p>
+        <div class="checks">
+          {% for plugin in plugins %}
+            <label><input type="checkbox" name="plugins" value="{{ plugin.id }}" {% if plugin.id in assigned %}checked{% endif %}> {{ plugin.name }} <span class="muted" dir="ltr">{{ plugin.slug }}</span></label>
+          {% empty %}
+            <p>هنوز افزونه‌ای در مرکز نیست.</p>
+          {% endfor %}
+        </div>
+        <button class="btn" type="submit">اعمال روی همه سایت‌های دسته</button>
+      </form>
+      <form method="post" action="{% url 'category-delete' obj.pk %}" class="card">{% csrf_token %}
+        <h2>حذف</h2>
+        <p class="hint">فقط اگر سایت و قالب نداشته باشد.</p>
+        <button class="danger" type="submit">حذف دسته</button>
+      </form>
+    {% else %}
+      <div class="card">
+        <h2>این دسته چه می‌کند؟</h2>
+        <p>سطح تجاری مشتری است. طلایی، نقره‌ای یا هر نام دیگری. قالب‌ها به یک دسته وصل می‌شوند و افزونه‌ها به دسته اضافه می‌شوند، نه تک‌تک به سایت‌ها.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
