@@ -11,11 +11,10 @@
     <p>مسیر محرمانه: <code dir="ltr">/{{ WEB_PASS }}/</code></p>
     <p dir="ltr">http://SERVER:{{ PANEL_PORT }}/{{ WEB_PASS }}/</p>
     <h2>دامنه‌های اضافه‌شده</h2>
-    <p class="hint">برای خود پنل، دامنه را در <a href="{% url 'tls-home' %}">گواهی TLS</a> ثبت کنید. اگر DNS به این سرور اشاره کند، گواهی Let’s Encrypt خودکار صادر می‌شود و آدرس <code dir="ltr">https://دامنه/{{ WEB_PASS }}/</code> باز می‌شود. ورود با آی‌پی و پورت <span dir="ltr">{{ PANEL_PORT }}</span> روی HTTP می‌ماند تا قفل نشوید.</p>
     {% for domain in domains %}
       <p dir="ltr">{% if domain.https %}https{% else %}http{% endif %}://{{ domain.domain }}/{{ WEB_PASS }}/ {% if domain.is_primary %}· اصلی{% endif %}</p>
     {% empty %}
-      <p class="muted">هنوز دامنه‌ای برای پنل ثبت نشده. از صفحه <a href="{% url 'tls-home' %}">گواهی TLS</a> یا دستور <code>sudo mohsen</code> گزینه «افزودن دامنه پنل» استفاده کنید.</p>
+      <p class="muted">هنوز دامنه‌ای برای پنل ثبت نشده. روی سرور دستور <code>sudo mohsen</code> را بزنید و گزینه «افزودن دامنه پنل (add domain)» را انتخاب کنید. بعد از آن، هم آی‌پی و هم دامنه کار می‌کنند.</p>
     {% endfor %}
   </div>
   <div class="card">
