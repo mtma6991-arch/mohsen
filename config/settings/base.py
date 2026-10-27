@@ -36,6 +36,7 @@ MIDDLEWARE = [
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "apps.core.middleware.DynamicCsrfMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -87,9 +88,6 @@ TLS_WEBROOT = Path(env("MOHSEN_ACME_WEBROOT", "/var/lib/mohsen-acme"))
 TLS_SOCK = env("MOHSEN_TLS_SOCK", "/run/mohsen/tls.sock")
 TLS_ACME_SERVER = env("MOHSEN_ACME_SERVER", "letsencrypt") or "letsencrypt"
 TLS_EMAIL = env("MOHSEN_ACME_EMAIL", "")
-# resolverهای DNS اضافی (با کاما یا فاصله جدا) که قبل از لیست پیش‌فرض
-# (شکن، 403online، الکترو، Cloudflare، Google، Quad9) امتحان می‌شوند؛
-# برای وقتی resolver سیستم روی این سرور خاص قابل‌اعتماد نیست.
 TLS_DNS_RESOLVERS = env("MOHSEN_DNS_RESOLVERS", "")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
@@ -110,6 +108,7 @@ SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_HTTPONLY = False
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "SAMEORIGIN"
+USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 _origins = [o.strip() for o in env("MOHSEN_CSRF_TRUSTED_ORIGINS", "").split(",") if o.strip()]

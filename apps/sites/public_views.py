@@ -7,6 +7,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.csrf import csrf_protect
 
 from apps.plugins.loader import iter_site_plugins
+from apps.sites.domains import host_lookup_variants
 from apps.sites.models import ContactMessage, Website
 from apps.sites.rendering import render_page, serve_asset
 
@@ -46,16 +47,26 @@ def _dispatch(request, website, rest, url_prefix):
 def front(request, rest=""):
     website = getattr(request, "tenant", None)
     if website is None:
+        if getattr(request, "is_admin_domain", False):
+            return redirect(f"/{settings.WEB_PASS}/")
         if (rest or "").strip("/") == "":
             return render(request, "public/unconfigured.html")
-        return render(request, "public/platform_message.html", {"title": "دامنه ثبت نشده", "body": "برای این میزبان سایتی تعریف نشده است."}, status=404)
+        return render(
+            request,
+            "public/platform_message.html",
+            {"title": "دامنه ثبت نشده", "body": "برای این میزبان سایتی تعریف نشده است."},
+            status=404,
+        )
     return _dispatch(request, website, rest, "")
 
 
 def preview(request, domain, rest=""):
     if not request.user.is_authenticated or not request.user.is_staff:
         return redirect(settings.LOGIN_URL)
-    website = get_object_or_404(Website.objects.select_related("category", "template"), domain=domain)
+    variants = host_lookup_variants(domain) or [domain]
+    website = Website.objects.select_related("category", "template").filter(domain__in=variants).first()
+    if website is None:
+        website = get_object_or_404(Website.objects.select_related("category", "template"), domain=domain)
     return _dispatch(request, website, rest, f"/_preview/{website.domain}")
 
 

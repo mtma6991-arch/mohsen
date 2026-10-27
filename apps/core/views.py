@@ -1,18 +1,24 @@
+from pathlib import Path
+
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth import logout
+from django.contrib.auth import logout, update_session_auth_hash
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
-from django.contrib.auth import update_session_auth_hash
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
 
 from apps.categories.models import Category
+from apps.core.access import sync_credentials
 from apps.core.audit import log_action
 from apps.core.decorators import staff_required
 from apps.core.models import ActivityLog, AdminDomain
 from apps.plugins.models import PluginPackage
+from apps.sites.domains import validate_admin_domain
 from apps.sites.models import ContactMessage, Website
 from apps.templates_engine.models import TemplatePackage
+from apps.tls.models import Certificate
+from apps.tls.names import is_public_dns_name
+from apps.tls.service import enqueue, enqueue_remove
 
 
 class PanelAuthForm(AuthenticationForm):
@@ -20,6 +26,16 @@ class PanelAuthForm(AuthenticationForm):
         super().__init__(*args, **kwargs)
         self.fields["username"].label = "نام کاربری"
         self.fields["password"].label = "رمز عبور"
+
+
+def sync_admin_domains_file() -> None:
+    registry = Path("/etc/mohsen/admin-domains.txt")
+    try:
+        registry.parent.mkdir(parents=True, exist_ok=True)
+        names = "\n".join(AdminDomain.objects.values_list("domain", flat=True))
+        registry.write_text((names + "\n") if names else "", encoding="utf-8")
+    except OSError:
+        pass
 
 
 def login_view(request):
@@ -69,6 +85,43 @@ def dashboard(request):
 
 @staff_required
 def settings_view(request):
+    if request.method == "POST":
+        action = (request.POST.get("action") or "").strip()
+        raw = (request.POST.get("domain") or "").strip()
+        try:
+            if action == "add-panel":
+                domain = validate_admin_domain(raw)
+                AdminDomain.objects.filter(is_primary=True).update(is_primary=False)
+                AdminDomain.objects.update_or_create(
+                    domain=domain, defaults={"is_primary": True, "note": "ثبت از تنظیمات پنل"}
+                )
+                sync_admin_domains_file()
+                sync_credentials()
+                log_action(request, "tls.panel-add", domain, "")
+                if is_public_dns_name(domain):
+                    messages.success(request, f"دامنه پنل {domain} ثبت شد.")
+                    messages.info(request, enqueue(domain, Certificate.Kind.PANEL, force=False))
+                else:
+                    messages.warning(
+                        request,
+                        f"دامنه {domain} ثبت شد. برای آی‌پی یا دامنه محلی گواهی عمومی صادر نمی‌شود.",
+                    )
+            elif action == "remove-panel":
+                domain = validate_admin_domain(raw)
+                row = AdminDomain.objects.filter(domain=domain).first()
+                if row is None:
+                    messages.error(request, "این دامنه پنل ثبت نشده است.")
+                else:
+                    enqueue_remove(domain)
+                    row.delete()
+                    sync_admin_domains_file()
+                    sync_credentials()
+                    log_action(request, "tls.panel-remove", domain, "")
+                    messages.success(request, f"دامنه {domain} حذف شد.")
+        except ValueError as exc:
+            messages.error(request, str(exc))
+        return redirect("settings")
+
     return render(
         request,
         "panel/settings.html",

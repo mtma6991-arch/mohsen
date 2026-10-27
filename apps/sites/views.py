@@ -44,14 +44,16 @@ def site_list(request):
 @staff_required
 def site_create(request):
     form = WebsiteForm(request.POST or None)
-    if request.method == "POST" and form.is_valid():
-        obj = form.save()
-        log_action(request, "site.create", obj.domain, obj.customer_name)
-        messages.success(request, "سایت ثبت شد. با اشاره دادن DNS دامنه به این سرور، سایت باز می‌شود.")
-        note = _schedule_site_tls(obj, previous_domain="", previous_status="", created=True)
-        if note:
-            messages.info(request, note)
-        return redirect("site-edit", pk=obj.pk)
+    if request.method == "POST":
+        if form.is_valid():
+            obj = form.save()
+            log_action(request, "site.create", obj.domain, obj.customer_name)
+            messages.success(request, "سایت ثبت شد. با اشاره دادن DNS دامنه به این سرور، سایت باز می‌شود.")
+            note = _schedule_site_tls(obj, previous_domain="", previous_status="", created=True)
+            if note:
+                messages.info(request, note)
+            return redirect("site-edit", pk=obj.pk)
+        messages.error(request, "ثبت سایت انجام نشد. لطفاً خطاهای مشخص‌شده در فرم را بررسی کنید.")
     return render(request, "panel/sites/form.html", {"form": form, "mode": "create", "template_map": _template_map()})
 
 
@@ -76,22 +78,24 @@ def site_edit(request, pk):
                 messages.error(request, f"افزونه خطا داد: {exc}")
         return redirect("site-edit", pk=pk)
 
+    previous_domain = obj.domain
+    previous_status = obj.status
     form = WebsiteForm(request.POST or None, instance=obj)
-    if request.method == "POST" and form.is_valid():
-        previous_domain = obj.domain
-        previous_status = obj.status
-        saved = form.save()
-        log_action(request, "site.update", saved.domain, saved.title)
-        messages.success(request, "سایت به‌روز شد.")
-        note = _schedule_site_tls(
-            saved,
-            previous_domain=previous_domain,
-            previous_status=previous_status,
-            created=False,
-        )
-        if note:
-            messages.info(request, note)
-        return redirect("site-edit", pk=pk)
+    if request.method == "POST":
+        if form.is_valid():
+            saved = form.save()
+            log_action(request, "site.update", saved.domain, saved.title)
+            messages.success(request, "سایت به‌روز شد.")
+            note = _schedule_site_tls(
+                saved,
+                previous_domain=previous_domain,
+                previous_status=previous_status,
+                created=False,
+            )
+            if note:
+                messages.info(request, note)
+            return redirect("site-edit", pk=pk)
+        messages.error(request, "تغییرات ذخیره نشد. خطاهای فرم را بررسی کنید.")
 
     panels = []
     for _row, inst in iter_site_plugins(obj):

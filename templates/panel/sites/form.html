@@ -13,6 +13,7 @@
 <form method="post" class="card form-card" style="margin-top:1rem">
   {% csrf_token %}
   {{ template_map|json_script:"template-map" }}
+  {{ form.non_field_errors }}
   <div class="grid-2">
     {% for field in form %}
       <label>{{ field.label }}{{ field }}{{ field.errors }}{% if field.help_text %}<small class="hint">{{ field.help_text }}</small>{% endif %}</label>

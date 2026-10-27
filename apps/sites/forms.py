@@ -3,7 +3,7 @@ import re
 
 from django import forms
 
-from apps.sites.domains import validate_customer_domain
+from apps.sites.domains import host_lookup_variants, validate_customer_domain
 from apps.sites.models import Website
 from apps.templates_engine.models import TemplatePackage
 
@@ -15,7 +15,7 @@ class WebsiteForm(forms.ModelForm):
         label="محتوای اختصاصی (JSON)",
         required=False,
         widget=forms.Textarea(attrs={"rows": 8, "dir": "ltr", "spellcheck": "false"}),
-        help_text="جایگزین کلیدهای demo_data قالب می‌شود. مثال: {\"products\": []}. خالی یعنی داده نمونه قالب.",
+        help_text='جایگزین کلیدهای demo_data قالب می‌شود. مثال: {"products": []}. خالی یعنی داده نمونه قالب.',
     )
 
     class Meta:
@@ -33,11 +33,26 @@ class WebsiteForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields["customer_name"].required = False
+        self.fields["title"].required = False
+        active_cats = self.fields["category"].queryset.filter(is_active=True)
+        self.fields["category"].queryset = active_cats
         self.fields["template"].queryset = TemplatePackage.objects.filter(is_active=True).select_related("category")
-        self.fields["category"].queryset = self.fields["category"].queryset.filter(is_active=True)
         content = {}
         if self.instance.pk:
             content = (self.instance.settings or {}).get("content") or {}
+            if not self.instance.accent_color and self.instance.category_id:
+                self.initial.setdefault("accent_color", self.instance.category.color)
+        else:
+            first_cat = active_cats.first()
+            if first_cat is not None:
+                self.initial.setdefault("category", first_cat.pk)
+                self.initial.setdefault("accent_color", first_cat.color or "#B6894A")
+                first_tpl = self.fields["template"].queryset.filter(category=first_cat).first()
+                if first_tpl is not None:
+                    self.initial.setdefault("template", first_tpl.pk)
+            else:
+                self.initial.setdefault("accent_color", "#B6894A")
         if content:
             self.fields["content_json"].initial = json.dumps(content, ensure_ascii=False, indent=2)
         if not self.instance.pk and not self.initial.get("status"):
@@ -48,7 +63,8 @@ class WebsiteForm(forms.ModelForm):
             domain = validate_customer_domain(self.cleaned_data.get("domain") or "")
         except ValueError as exc:
             raise forms.ValidationError(str(exc)) from exc
-        qs = Website.objects.filter(domain=domain)
+        variants = host_lookup_variants(domain) or [domain]
+        qs = Website.objects.filter(domain__in=variants)
         if self.instance.pk:
             qs = qs.exclude(pk=self.instance.pk)
         if qs.exists():
@@ -65,6 +81,20 @@ class WebsiteForm(forms.ModelForm):
 
     def clean(self):
         cleaned = super().clean()
+        domain = (cleaned.get("domain") or "").strip()
+        title = (cleaned.get("title") or "").strip()
+        customer_name = (cleaned.get("customer_name") or "").strip()
+        if not title and domain:
+            title = domain
+            cleaned["title"] = title
+        if not customer_name and title:
+            customer_name = title
+            cleaned["customer_name"] = customer_name
+        if not cleaned.get("title"):
+            self.add_error("title", "عنوان سایت یا دامنه را وارد کنید.")
+        if not cleaned.get("customer_name"):
+            self.add_error("customer_name", "نام مشتری یا دامنه را وارد کنید.")
+
         category = cleaned.get("category")
         template = cleaned.get("template")
         if category and template and template.category_id != category.id:

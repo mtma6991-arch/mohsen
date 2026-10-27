@@ -45,7 +45,10 @@
     {% endfor %}
   </div>
   <div class="card">
-    <h2>دامنه‌های سایت</h2>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem">
+      <h2 style="margin:0">دامنه‌های سایت</h2>
+      <a class="btn" href="{% url 'site-create' %}">افزودن وب‌سایت و دامنه</a>
+    </div>
     <table>
       <tr><th>دامنه</th><th>وضعیت سایت</th><th>TLS</th><th></th></tr>
       {% for site in sites %}
@@ -53,21 +56,22 @@
         <tr>
           <td dir="ltr"><a href="{% url 'site-edit' site.pk %}">{{ site.domain }}</a></td>
           <td>{{ site.get_status_display }}</td>
-          <td>{% if cert %}<span class="badge">{{ cert.get_status_display }}</span>{% if cert.expires_at %}<div class="muted" dir="ltr">{{ cert.expires_at|jalali }}</div>{% endif %}{% if cert.last_error %}<div class="hint">{{ cert.last_error }}</div>{% endif %}{% else %}<span class="muted">—</span>{% endif %}</td>
+          <td>{% if cert %}<span class="badge">{{ cert.get_status_display
+{% if cert %}<span class="badge">{{ cert.get_status_display }}</span>{% else %}<span class="muted">بدون گواهی</span>{% endif %}
+          {% if cert.expires_at %} · انقضا <span dir="ltr">{{ cert.expires_at|jalali }}</span>{% endif %}</td>
           <td>
-            <form method="post">{% csrf_token %}
+            <form method="post" style="display:inline">{% csrf_token %}
               <input type="hidden" name="action" value="issue">
               <input type="hidden" name="domain" value="{{ site.domain }}">
-              <button class="ghost" type="submit">صدور</button>
+              <button class="btn" type="submit">صدور دوباره</button>
             </form>
           </td>
         </tr>
         {% endwith %}
       {% empty %}
-        <tr><td colspan="4">سایتی نیست.</td></tr>
+        <tr><td colspan="4" class="muted">سایتی ثبت نشده.</td></tr>
       {% endfor %}
     </table>
-    <p class="hint">سایت فعال تازه، خودش در صف صدور می‌رود. این دکمه فقط برای تلاش دوباره است. گزارش فنی: <span dir="ltr">/var/log/mohsen/tls.log</span></p>
   </div>
 </div>
 {% endblock %}
