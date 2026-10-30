@@ -7,7 +7,7 @@
   <div class="toolbar">
     <a class="btn" target="_blank" href="/_preview/{{ obj.domain }}/">باز کردن پیش‌نمایش</a>
     <a class="btn" href="{% url 'site-memar' obj.pk %}">ویرایش با معمار</a>
-    <span class="muted">رکورد A دامنه را به آی‌پی همین سرور بدهید. www اگر به همین سرور برسد در گواهی می‌آید و به همین سایت وصل است.</span>
+    <span class="muted">برای دامنه واقعی، رکورد A را به آی‌پی همین سرور بدهید. پیشوند www هم به همین سایت می‌رسد.</span>
   </div>
 {% endif %}
 <form method="post" class="card form-card" style="margin-top:1rem">
@@ -43,21 +43,6 @@
       </section>
     </div>
     <div>
-      <div class="card">
-        <h2>گواهی TLS</h2>
-        {% if tls_cert %}
-          <p>وضعیت: <span class="badge">{{ tls_cert.get_status_display }}</span></p>
-          {% if tls_cert.expires_at %}<p>انقضا: <span dir="ltr">{{ tls_cert.expires_at|jalali }}</span></p>{% endif %}
-          {% if tls_cert.sans %}<p dir="ltr">{{ tls_cert.sans|join:", " }}</p>{% endif %}
-          {% if tls_cert.last_error %}<p class="hint">{{ tls_cert.last_error }}</p>{% endif %}
-        {% else %}
-          <p class="muted">هنوز گواهی‌ای برای این دامنه ثبت نشده. با فعال بودن سایت و آماده بودن DNS، صدور خودکار انجام می‌شود.</p>
-        {% endif %}
-        <form method="post" action="{% url 'site-tls' obj.pk %}">{% csrf_token %}
-          <button class="btn" type="submit">صدور دوباره</button>
-        </form>
-        <p class="hint">صدور دوباره سهمیه هفتگی Let’s Encrypt را مصرف می‌کند. اگر خطا از DNS است، اول رکورد را درست کنید.</p>
-      </div>
       <div class="card">
         <h2>پیش‌نمایش</h2>
         <iframe class="preview" src="/_preview/{{ obj.domain }}/" title="preview"></iframe>
